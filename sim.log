@@ -1,0 +1,10 @@
+Reading pref.tcl
+
+# 10.6
+
+# vsim "+permissive" -t 1ns -coverage -classdebug -do " log -r /*; run -all;" "+jtag_rbb_enable=0" -lib work "+MAX_CYCLES=10000000" "+BASEDIR=tmp/riscv-tests/build/isa/" "+UVM_NO_RELNOTES" "+UVM_VERBOSITY=LOW" ariane_tb_optimized "+permissive-off" -c top 
+# Start time: 19:01:20 on Apr 17,2019
+# ** Error: (vsim-3170) Could not find '/misc/scratch/jrs/verif/ariane/work.top'.
+# Error loading design
+# End time: 19:01:20 on Apr 17,2019, Elapsed time: 0:00:00
+# Errors: 1, Warnings: 0
