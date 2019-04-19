@@ -2,7 +2,7 @@
 import ariane_pkg::*;
 
 
-module top;    
+module jrs_tb;    
 
 logic [63:0] pc_i;
 logic is_compressed_i;
@@ -21,4 +21,4 @@ initial begin
 end
 
 
-endmodule: top
+endmodule: jrs_tb

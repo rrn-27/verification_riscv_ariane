@@ -2,4 +2,4 @@ export RISCV=/misc/scratch/jrs/verif/riscv/toolchain
 module load mentor/modelsim/2016
 make clean
 make build_new 
-make sim_new
+#make sim_new

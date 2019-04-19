@@ -1,0 +1,21 @@
+
+git checkout master
+git pull origin master
+git merge test
+git push origin master
+
+
+
+or
+
+
+git checkout test
+git pull 
+git checkout master
+git pull
+git merge --no-ff --no-commit test
+
+git status
+
+git commit -m 'merge test branch'
+git push

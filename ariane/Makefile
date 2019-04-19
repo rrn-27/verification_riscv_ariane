@@ -9,7 +9,7 @@ ver-library    ?= work-ver
 # library for DPI
 dpi-library    ?= work-dpi
 # Top level module to compile
-top_level      ?= ariane_tb
+top_level      ?= jrs_tb
 # Maximum amount of cycles for a successful simulation run
 max_cycles     ?= 10000000
 # Test case to run
@@ -246,7 +246,7 @@ build_new: $(library) $(library)/.build-srcs $(library)/.build-tb
 sim_new: build_new
 	vsim${questa_version} +permissive $(questa-flags) $(questa-cmd) -lib $(library) +MAX_CYCLES=$(max_cycles) \
 	+BASEDIR=$(riscv-test-dir) $(uvm-flags) $(QUESTASIM_FLAGS)  \
-	${top_level}_optimized +permissive-off -c top | tee sim.log
+	${top_level}_optimized +permissive-off | tee sim.log
 
 #	${top_level}_optimized +permissive-off ++$(elf-bin) ++$(target-options) | tee sim.log
 
