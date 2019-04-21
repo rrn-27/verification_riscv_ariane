@@ -1,4 +1,4 @@
-//`timescale 1ns / 100ps
+`timescale 1ns / 100ps
 import ariane_pkg::*;
 
 
@@ -18,6 +18,17 @@ decoder decoder0(
 initial begin
 	pc_i = 64'h56577777;
 	is_compressed_i = 1;
+#500 
+	
+	pc_i = 64'h426738393;
+	is_compressed_i = 0;
+
+#500 
+	
+	pc_i = 64'h1234679;
+	is_compressed_i = 1;
+	
+#2000 $finish;
 end
 
 
