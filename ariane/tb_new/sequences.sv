@@ -7,11 +7,6 @@ package sequences;
          // TODO: Register the  decoder_transaction_in object. Hint: Look at other classes to find out what is missing.
        `uvm_object_utils(decoder_transaction_in);
 
-        rand logic [31:0] A;
-        rand logic [31:0] B;
-        rand logic [4:0] opcode;
-        rand logic rst;
-        rand logic CIN;
 
     	rand logic [63:0]        pc_i;                    
     	rand logic               is_compressed_i;
