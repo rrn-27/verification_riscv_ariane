@@ -37,10 +37,7 @@ module decoder (
     input  logic               tw_i,                    // timeout wait
     input  logic               tsr_i,                   // trap sret
     output scoreboard_entry_t  instruction_o,           // scoreboard entry to scoreboard
-    output logic               is_control_flow_instr_o, // this instruction will change the control flow
-    //clk and reset
-    input  logic	       clk,			// clk added to the original design
-    input  logic	       reset_n			// reset added to the original design
+    output logic               is_control_flow_instr_o  // this instruction will change the control flow
 );
     logic illegal_instr;
     // this instruction is an environment call (ecall), it is handled like an exception
@@ -65,7 +62,7 @@ module decoder (
     logic [63:0] imm_uj_type;
     logic [63:0] imm_bi_type;
 
-    always @(posedge clk) begin : decoder
+    always_comb begin : decoder
 
         imm_select                  = NOIMM;
         is_control_flow_instr_o     = 1'b0;
@@ -1005,7 +1002,7 @@ module decoder (
     // --------------------------------
     // Sign extend immediate
     // --------------------------------
-    always @(posedge clk) begin : sign_extend
+    always_comb begin : sign_extend
         imm_i_type  = i_imm(instruction_i);
         imm_s_type  = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
         imm_sb_type = sb_imm(instruction_i);
@@ -1051,7 +1048,7 @@ module decoder (
     // ---------------------
     // Exception handling
     // ---------------------
-    always @(posedge clk) begin : exception_handling
+    always_comb begin : exception_handling
         instruction_o.ex      = ex_i;
         instruction_o.valid   = ex_i.valid;
         // look if we didn't already get an exception in any previous
