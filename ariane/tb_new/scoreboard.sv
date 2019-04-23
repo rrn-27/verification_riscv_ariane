@@ -54,13 +54,19 @@ function void decoder_scoreboard::compare;
     //results of the comparison.
     //You can use tx_in.convert2string() and tx_out.convert2string() for
     //debugging purposes
+    
 endfunction
 
-function [33:0] decoder_scoreboard::getresult;
+function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
     //TODO: Remove the statement below
     //Modify this function to return a 34-bit result {VOUT, COUT,OUT[31:0]} which is
     //consistent with the given spec.
-    return 34'd0;
+
+endfunction
+
+
+function decoder_scoreboard::getresult_cntrl_flow;
+
 endfunction
 
 endpackage: scoreboard
