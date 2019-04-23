@@ -2,6 +2,7 @@
 package scoreboard; 
 import uvm_pkg::*;
 import sequences::*;
+import ariane_pkg::*;
 
 class decoder_scoreboard extends uvm_scoreboard;
     `uvm_component_utils(decoder_scoreboard)
@@ -62,6 +63,20 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
     //Modify this function to return a 34-bit result {VOUT, COUT,OUT[31:0]} which is
     //consistent with the given spec.
 
+    riscv::instruction_t instr_test;
+    assign instr_test = riscv::instruction_t'(instruction_i);
+
+    case (instr.rtype.opcode)
+
+
+
+
+
+    endcase
+
+
+//  Write a default return value
+//    return 34'd0;
 endfunction
 
 
