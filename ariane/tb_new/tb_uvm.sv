@@ -3,7 +3,7 @@
 import uvm_pkg::*;
 import modules_pkg::*;
 import sequences::*;
-import coverage::*;
+//import coverage::*;
 import scoreboard::*;
 import tests::*;
 

@@ -3,7 +3,7 @@ package modules_pkg;
 
 import uvm_pkg::*;
 import sequences::*;
-import coverage::*;
+//import coverage::*;
 import scoreboard::*;
 
 typedef uvm_sequencer #(decoder_transaction_in) decoder_sequencer_in;
@@ -95,20 +95,20 @@ class decoder_monitor_in extends uvm_monitor;
         // TODO: Read the values from the virtual interface of dut_vi_in and
         // assign them to the transaction "tx"
 
-	tx.pc_i                     <=  dut_vi_in.pc_i;
-	tx.is_compressed_i          <=  dut_vi_in.is_compressed_i;
-	tx.compressed_instr_i       <=  dut_vi_in.compressed_instr_i;
-	tx.is_illegal_i             <=  dut_vi_in.is_illegal_i;
-	tx.instruction_i	    <=  dut_vi_in.instruction_i;    
-	tx.branch_predict_i	    <=  dut_vi_in.branch_predict_i;       
-	tx.instruction_i	    <=  dut_vi_in.instruction_i;       
-	tx.ex_i		     	    <=  dut_vi_in.ex_i;
-	tx.priv_lvl_i	            <=  dut_vi_in.priv_lvl_i;      
-	tx.debug_mode_i	     	    <=  dut_vi_in.debug_mode_i;      
-	tx.fs_i		            <=  dut_vi_in.fs_i;
-	tx.frm_i		    <=  dut_vi_in.frm_i;       
-	tx.tvm_i		    <=  dut_vi_in.tvm_i;       
-	tx.tw_i		            <=  dut_vi_in.tw_i;
+	tx.pc_i                     =  dut_vi_in.pc_i;
+	tx.is_compressed_i          =  dut_vi_in.is_compressed_i;
+	tx.compressed_instr_i       =  dut_vi_in.compressed_instr_i;
+	tx.is_illegal_i             =  dut_vi_in.is_illegal_i;
+	tx.instruction_i	    =  dut_vi_in.instruction_i;    
+	tx.branch_predict_i	    =  dut_vi_in.branch_predict_i;       
+	tx.instruction_i	    =  dut_vi_in.instruction_i;       
+	tx.ex_i		     	    =  dut_vi_in.ex_i;
+	tx.priv_lvl_i	            =  dut_vi_in.priv_lvl_i;      
+	tx.debug_mode_i	     	    =  dut_vi_in.debug_mode_i;      
+	tx.fs_i		            =  dut_vi_in.fs_i;
+	tx.frm_i		    =  dut_vi_in.frm_i;       
+	tx.tvm_i		    =  dut_vi_in.tvm_i;       
+	tx.tw_i		            =  dut_vi_in.tw_i;
 
 
 //REVISIT for reset
@@ -217,8 +217,9 @@ class decoder_env extends uvm_env;
 
     decoder_agent_in decoder_agent_in_h;
     decoder_agent_out decoder_agent_out_h;
-    decoder_subscriber_in decoder_subscriber_in_h;
-    decoder_subscriber_out decoder_subscriber_out_h;
+	// REVISIT- Enable when coverage
+    //decoder_subscriber_in decoder_subscriber_in_h;
+    //decoder_subscriber_out decoder_subscriber_out_h;
     decoder_scoreboard decoder_scoreboard_h;
 
     function new(string name, uvm_component parent);
@@ -228,8 +229,9 @@ class decoder_env extends uvm_env;
     function void build_phase(uvm_phase phase);
         decoder_agent_in_h = decoder_agent_in::type_id::create("decoder_agent_in_h",this);
         decoder_agent_out_h = decoder_agent_out::type_id::create("decoder_agent_out_h",this);
-        decoder_subscriber_in_h = decoder_subscriber_in::type_id::create("decoder_subscriber_in_h",this);
-        decoder_subscriber_out_h = decoder_subscriber_out::type_id::create("decoder_subscriber_out_h",this);
+	// REVISIT- Enable when coverage
+        //decoder_subscriber_in_h = decoder_subscriber_in::type_id::create("decoder_subscriber_in_h",this);
+        //decoder_subscriber_out_h = decoder_subscriber_out::type_id::create("decoder_subscriber_out_h",this);
         decoder_scoreboard_h = decoder_scoreboard::type_id::create("decoder_scoreboard_h",this);
     endfunction: build_phase
 

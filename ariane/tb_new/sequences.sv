@@ -1,6 +1,7 @@
 `include "uvm_macros.svh"
 package sequences;
-
+    
+import ariane_pkg::*;
     import uvm_pkg::*;
 
     class decoder_transaction_in extends uvm_sequence_item;
@@ -68,18 +69,13 @@ package sequences;
         task body;
             decoder_transaction_in tx;
             tx=decoder_transaction_in::type_id::create("tx");
-            tx.restrict_arith_add_sub.constraint_mode(1);
-            tx.restrict_shift_operations.constraint_mode(0);
-            tx.restrict_compare.constraint_mode(0);
-            tx.restrict_logical.constraint_mode(0);
-            tx.restrict_unused.constraint_mode(0);
             start_item(tx);
             assert(tx.randomize());
             finish_item(tx);
         endtask: body
     endclass: simple_seq
 
-class simple_seq_2 extends uvm_sequence #(decoder_transaction_in);
+/*class simple_seq_2 extends uvm_sequence #(decoder_transaction_in);
         `uvm_object_utils(simple_seq_2)
 
         function new(string name = "");
@@ -279,7 +275,7 @@ class simple_seq_4_random extends uvm_sequence #(decoder_transaction_in);
             assert(tx.randomize());
             finish_item(tx);
         endtask: body
-    endclass: simple_seq_4_random
+    endclass: simple_seq_4_random*/
 
 
     class seq_of_commands extends uvm_sequence #(decoder_transaction_in);
@@ -294,55 +290,10 @@ class simple_seq_4_random extends uvm_sequence #(decoder_transaction_in);
             repeat(15000)
             begin
                 simple_seq seq;
-                simple_seq_2 seq_2;
-                simple_seq_3 seq_3;
-                simple_seq_4 seq_4;
-                simple_seq_5 seq_5;
-                simple_seq_6 seq_6;
-                simple_seq_random seq_rand;
-                simple_seq_2_random seq_2_rand;
-                simple_seq_3_random seq_3_rand;
-                simple_seq_4_random seq_4_rand;
                 seq = simple_seq::type_id::create("seq");
-                seq_2 = simple_seq_2::type_id::create("seq_2");
-                seq_3 = simple_seq_3::type_id::create("seq_3");
-                seq_4 = simple_seq_4::type_id::create("seq_4");
-                seq_5 = simple_seq_5::type_id::create("seq_5");
-                seq_6 = simple_seq_6::type_id::create("seq_6");
-                seq_rand = simple_seq_random::type_id::create("seq_rand");
-                seq_2_rand = simple_seq_2_random::type_id::create("seq_2_rand");
-                seq_3_rand = simple_seq_3_random::type_id::create("seq_3_rand");
-                seq_4_rand = simple_seq_4_random::type_id::create("seq_4_rand");
 
                 assert( seq.randomize() );
                 seq.start(p_sequencer);
-
-                assert( seq_2.randomize() );
-                seq_2.start(p_sequencer);
-
-                assert( seq_3.randomize() );
-                seq_3.start(p_sequencer);
-
-               assert( seq_4.randomize() );
-                seq_4.start(p_sequencer);
-
-               assert( seq_5.randomize() );
-               seq_5.start(p_sequencer);
-
-                assert( seq_6.randomize() );
-               seq_6.start(p_sequencer);
-
-              assert( seq_rand.randomize() );
-              seq_rand.start(p_sequencer);
-
-               assert( seq_2_rand.randomize() );
-              seq_2_rand.start(p_sequencer);
-
-               assert( seq_3_rand.randomize() );
-              seq_3_rand.start(p_sequencer);
-
-               assert( seq_4_rand.randomize() );
-               seq_4_rand.start(p_sequencer);
 
             end
         endtask: body
