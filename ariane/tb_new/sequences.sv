@@ -13,31 +13,47 @@ import ariane_pkg::*;
     	rand logic               is_compressed_i;
     	rand logic [15:0]        compressed_instr_i;     
     	rand logic               is_illegal_i;            
-    	rand logic [31:0]        instruction_i;           
-	//REVISIT this
+    	logic [31:0]        	instruction_i;           
+	rand logic [6:0] 	opcode;
+	rand logic [4:0] 	rs1;
+	rand logic [4:0] 	rs2;
+	rand logic [4:0] 	rd;
+	rand logic [12:0]	imm;
+	rand logic [2:0] 	funct3;
+	rand logic [6:0] 	funct7;
     	rand branchpredict_sbe_t branch_predict_i;
-	//REVISIT this
     	rand exception_t         ex_i;                    
-	//REVISIT this
     	rand riscv::priv_lvl_t   priv_lvl_i;              
     	rand logic               debug_mode_i;
-	//REVISIT this
     	rand riscv::xs_t         fs_i;               
     	rand logic [2:0]         frm_i;                   
     	rand logic               tvm_i;                   
     	rand logic               tw_i;                   
-
+	
+	
         //TODO: Add constraints here
 
-       
+      	constraint restrict_load_store {((opcode ==7'b0100011) || (opcode ==7'b0000011));}
+      	constraint restrict_store_legal {(opcode ==7'b0100011)->((funct3 == 3'b000) ||(funct3 == 3'b001) || (funct3 == 3'b010) || (funct3 == 3'b011));}
+      	constraint restrict_load_legal {(opcode ==7'b0000011)->((funct3 == 3'b000) ||(funct3 == 3'b001) || (funct3 == 3'b010) || (funct3 == 3'b011) || (funct3 == 3'b100) || (funct3 == 3'b101) || (funct3 == 3'b110));}
+ 
 
         function new(string name = "");
             super.new(name);
         endfunction: new
 
-      /*  function string convert2string;
-            convert2string={$sformatf("Operand A = %b, Operand B = %b, Opcode = %b, CIN = %b",A,B,opcode,CIN)};
-        endfunction: convert2string*/
+        function string convert2string;
+            convert2string={$sformatf("Instruction = %b",instruction_i)};
+        endfunction: convert2string
+	
+	function post_randomize();
+		if(opcode == 7'b0100011) begin
+			instruction_i[31:0] = {imm[11:5],rs2[4:0],rs1[4:0],funct3,imm[4:0],opcode};
+		end
+		else if(opcode == 7'b0000011) begin
+			instruction_i[31:0] = {imm[11:0],rs1,funct3,rd[4:0],opcode};
+		end
+	endfunction: post_randomize
 
     endclass: decoder_transaction_in
 
@@ -53,9 +69,9 @@ import ariane_pkg::*;
             super.new(name);
         endfunction: new;
         
-       /* function string convert2string;
-            convert2string={$sformatf("OUT = %b, COUT = %b, VOUT = %b",OUT,COUT,VOUT)};
-        endfunction: convert2string*/
+        function string convert2string;
+            convert2string={$sformatf("PC = %b\n",instruction_o.pc)};
+        endfunction: convert2string
 
     endclass: decoder_transaction_out
 

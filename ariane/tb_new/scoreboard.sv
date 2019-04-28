@@ -63,15 +63,15 @@ function void decoder_scoreboard::compare;
     instr_output = tx_out.instruction_o;
 
     if(instr_check.pc != instr_output.pc) begin
-	`uvm_info("Compare_failed","PC not equal",UVM_LOW);
+	`uvm_info("Compare_failed",$sformatf("Expected = %b Got = %b",instr_check.pc,instr_output.pc),UVM_LOW);
+
+//|| (instr_check.fu != instr_output.fu) || (instr_check.op != instr_output.op) || (instr_check.rs1 != instr_output.rs1) || (instr_check.rs2 != instr_output.rs2) || (instr_check.rd != instr_output.rd) || (instr_check.result != instr_output.result) || (instr_check.valid != instr_output.valid) || (instr_check.use_imm != instr_output.use_imm) || (instr_check.use_pc != instr_output.use_pc) ||  (instr_check.bp != instr_output.bp) || (instr_check.is_compressed != instr_output.is_compressed)) begin
     end
     else begin
-	`uvm_info("Compare_success","PC equal",UVM_LOW);
+	`uvm_info("Compare_success","Decoder output equal",UVM_LOW);
+//	`uvm_info("Compare_success",tx_out.convert2string(),UVM_LOW);
     end
 
-
-    
-    
 endfunction
 
 function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
@@ -115,6 +115,26 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
     ebreak = 0;
 
     instr_test = riscv::instruction_t'(instruction_i);
+	
+        getresult_scoreboard_entry.result        = 64'b0;
+        getresult_scoreboard_entry.use_imm        = 1'b0;
+       // is_control_flow_instr_o     = 1'b0;
+        illegal_instr               = 1'b0;
+        getresult_scoreboard_entry.pc            = pc_i;
+        getresult_scoreboard_entry.trans_id      = 5'b0;
+        getresult_scoreboard_entry.fu            = NONE;
+        getresult_scoreboard_entry.op            = ADD;
+        getresult_scoreboard_entry.rs1           = '0;
+        getresult_scoreboard_entry.rs2           = '0;
+        getresult_scoreboard_entry.rd            = '0;
+        getresult_scoreboard_entry.use_pc        = 1'b0;
+        getresult_scoreboard_entry.trans_id      = '0;
+        getresult_scoreboard_entry.is_compressed = is_compressed_i;
+        getresult_scoreboard_entry.use_zimm      = 1'b0;
+        getresult_scoreboard_entry.bp            = branch_predict_i;
+        ecall                       = 1'b0;
+        ebreak                      = 1'b0;
+        //check_fprm                  = 1'b0;
 
             case (instr_test.rtype.opcode)
                0100011: begin
