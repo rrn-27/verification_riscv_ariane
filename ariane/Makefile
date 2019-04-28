@@ -240,10 +240,10 @@ build: $(library) $(library)/.build-srcs $(library)/.build-tb $(dpi-library)/ari
 	# Optimize top level
 	vopt$(questa_version) $(compile_flag) -work $(library)  $(top_level) -o $(top_level)_optimized +acc -check_synthesis
 
-build_new: $(library) $(library)/.build-srcs $(library)/.build-tb 
+build_new:clean $(library) $(library)/.build-srcs $(library)/.build-tb 
 	vopt$(questa_version) $(compile_flag) -work $(library)  $(top_level) -o $(top_level)_optimized +acc -check_synthesis
 
-sim_new: build_new
+sim_new: clean  build_new
 	vsim${questa_version} +permissive $(questa-flags) $(questa-cmd) -lib $(library) +MAX_CYCLES=$(max_cycles) \
 	+BASEDIR=$(riscv-test-dir) $(uvm-flags) $(QUESTASIM_FLAGS)  \
 	${top_level}_optimized +permissive-off | tee sim.log
