@@ -98,6 +98,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
     logic ecall;
     logic ebreak;              
     riscv::instruction_t instr_test;
+    scoreboard_entry_t collect_instr_o;
 
     pc_i = tx_in.pc_i;
     is_compressed_i = tx_in.is_compressed_i;
@@ -116,77 +117,77 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 
     instr_test = riscv::instruction_t'(instruction_i);
 	
-        getresult_scoreboard_entry.result        = 64'b0;
-        getresult_scoreboard_entry.use_imm        = 1'b0;
+        collect_instr_o.result        = 64'b0;
+        collect_instr_o.use_imm        = 1'b0;
        // is_control_flow_instr_o     = 1'b0;
         illegal_instr               = 1'b0;
-        getresult_scoreboard_entry.pc            = pc_i;
-        getresult_scoreboard_entry.trans_id      = 5'b0;
-        getresult_scoreboard_entry.fu            = NONE;
-        getresult_scoreboard_entry.op            = ADD;
-        getresult_scoreboard_entry.rs1           = '0;
-        getresult_scoreboard_entry.rs2           = '0;
-        getresult_scoreboard_entry.rd            = '0;
-        getresult_scoreboard_entry.use_pc        = 1'b0;
-        getresult_scoreboard_entry.trans_id      = '0;
-        getresult_scoreboard_entry.is_compressed = is_compressed_i;
-        getresult_scoreboard_entry.use_zimm      = 1'b0;
-        getresult_scoreboard_entry.bp            = branch_predict_i;
+        collect_instr_o.pc            = pc_i;
+        collect_instr_o.trans_id      = 5'b0;
+        collect_instr_o.fu            = NONE;
+        collect_instr_o.op            = ADD;
+        collect_instr_o.rs1           = '0;
+        collect_instr_o.rs2           = '0;
+        collect_instr_o.rd            = '0;
+        collect_instr_o.use_pc        = 1'b0;
+        collect_instr_o.trans_id      = '0;
+        collect_instr_o.is_compressed = is_compressed_i;
+        collect_instr_o.use_zimm      = 1'b0;
+        collect_instr_o.bp            = branch_predict_i;
         ecall                       = 1'b0;
         ebreak                      = 1'b0;
         //check_fprm                  = 1'b0;
 
             case (instr_test.rtype.opcode)
                0100011: begin
-                    getresult_scoreboard_entry.fu  = STORE;
-                    getresult_scoreboard_entry.use_imm = 1 ;
-                    getresult_scoreboard_entry.result = {{52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7]};
-                    getresult_scoreboard_entry.rs1[4:0]  = instr_test.stype.rs1;
-                    getresult_scoreboard_entry.rs2[4:0]  = instr_test.stype.rs2;
+                    collect_instr_o.fu  = STORE;
+                    collect_instr_o.use_imm = 1 ;
+                    collect_instr_o.result = {{52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7]};
+                    collect_instr_o.rs1[4:0]  = instr_test.stype.rs1;
+                    collect_instr_o.rs2[4:0]  = instr_test.stype.rs2;
                     case (instr_test.stype.funct3)
-                        3'b000: getresult_scoreboard_entry.op  = SB;
-                        3'b001: getresult_scoreboard_entry.op  = SH;
-                        3'b010: getresult_scoreboard_entry.op  = SW;
-                        3'b011: getresult_scoreboard_entry.op  = SD;
+                        3'b000: collect_instr_o.op  = SB;
+                        3'b001: collect_instr_o.op  = SH;
+                        3'b010: collect_instr_o.op  = SW;
+                        3'b011: collect_instr_o.op  = SD;
                         default: illegal_instr = 1'b1;
                     endcase
                 end
 
                 0000011: begin
-                    getresult_scoreboard_entry.fu  = LOAD;
-               	    getresult_scoreboard_entry.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
-                    getresult_scoreboard_entry.use_imm = 1'b1;
-                    getresult_scoreboard_entry.rs1[4:0] = instr_test.itype.rs1;
-                    getresult_scoreboard_entry.rd[4:0]  = instr_test.itype.rd;
+                    collect_instr_o.fu  = LOAD;
+               	    collect_instr_o.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
+                    collect_instr_o.use_imm = 1'b1;
+                    collect_instr_o.rs1[4:0] = instr_test.itype.rs1;
+                    collect_instr_o.rd[4:0]  = instr_test.itype.rd;
                    case (instr_test.itype.funct3)
-                        3'b000: getresult_scoreboard_entry.op  = LB;
-                        3'b001: getresult_scoreboard_entry.op  = LH;
-                        3'b010: getresult_scoreboard_entry.op  = LW;
-                        3'b100: getresult_scoreboard_entry.op  = LBU;
-                        3'b101: getresult_scoreboard_entry.op  = LHU;
-                        3'b110: getresult_scoreboard_entry.op  = LWU;
-                        3'b011: getresult_scoreboard_entry.op  = LD;
+                        3'b000: collect_instr_o.op  = LB;
+                        3'b001: collect_instr_o.op  = LH;
+                        3'b010: collect_instr_o.op  = LW;
+                        3'b100: collect_instr_o.op  = LBU;
+                        3'b101: collect_instr_o.op  = LHU;
+                        3'b110: collect_instr_o.op  = LWU;
+                        3'b011: collect_instr_o.op  = LD;
                         default: illegal_instr = 1'b1;
                     endcase
                 end
 
                 0100111: begin
                     if (FP_PRESENT && fs_i != riscv::Off) begin 
-                        getresult_scoreboard_entry.fu  = STORE;
-                        getresult_scoreboard_entry.result = {{52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7]};
-                        getresult_scoreboard_entry.use_imm = 1'b1;
-                        getresult_scoreboard_entry.rs1        = instr_test.stype.rs1;
-                        getresult_scoreboard_entry.rs2        = instr_test.stype.rs2;
+                        collect_instr_o.fu  = STORE;
+                        collect_instr_o.result = {{52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7]};
+                        collect_instr_o.use_imm = 1'b1;
+                        collect_instr_o.rs1        = instr_test.stype.rs1;
+                        collect_instr_o.rs2        = instr_test.stype.rs2;
                         // determine store size
                         case (instr_test.stype.funct3)
                             // Only process instruction if corresponding extension is active (static)
-                            3'b000: if (XF8) getresult_scoreboard_entry.op = FSB;
+                            3'b000: if (XF8) collect_instr_o.op = FSB;
                                     else illegal_instr = 1'b1;
-                            3'b001: if (XF16 | XF16ALT) getresult_scoreboard_entry.op = FSH;
+                            3'b001: if (XF16 | XF16ALT) collect_instr_o.op = FSH;
                                     else illegal_instr = 1'b1;
-                            3'b010: if (RVF) getresult_scoreboard_entry.op = FSW;
+                            3'b010: if (RVF) collect_instr_o.op = FSW;
                                     else illegal_instr = 1'b1;
-                            3'b011: if (RVD) getresult_scoreboard_entry.op = FSD;
+                            3'b011: if (RVD) collect_instr_o.op = FSD;
                                     else illegal_instr = 1'b1;
                             default: illegal_instr = 1'b1;
                         endcase
@@ -196,21 +197,21 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 
                 0000111: begin
                     if (FP_PRESENT && fs_i != riscv::Off) begin // only generate decoder if FP extensions are enabled (static)
-                        getresult_scoreboard_entry.fu  = LOAD;
-               	        getresult_scoreboard_entry.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
-                        getresult_scoreboard_entry.use_imm = 1'b1;
-                        getresult_scoreboard_entry.rs1       = instr_test.itype.rs1;
-                        getresult_scoreboard_entry.rd        = instr_test.itype.rd;
+                        collect_instr_o.fu  = LOAD;
+               	        collect_instr_o.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
+                        collect_instr_o.use_imm = 1'b1;
+                        collect_instr_o.rs1       = instr_test.itype.rs1;
+                        collect_instr_o.rd        = instr_test.itype.rd;
                         // determine load size
                         case (instr_test.itype.funct3)
                             // Only process instruction if corresponding extension is active (static)
-                            3'b000: if (XF8) getresult_scoreboard_entry.op = FLB;
+                            3'b000: if (XF8) collect_instr_o.op = FLB;
                                     else illegal_instr = 1'b1;
-                            3'b001: if (XF16 | XF16ALT) getresult_scoreboard_entry.op = FLH;
+                            3'b001: if (XF16 | XF16ALT) collect_instr_o.op = FLH;
                                     else illegal_instr = 1'b1;
-                            3'b010: if (RVF) getresult_scoreboard_entry.op  = FLW;
+                            3'b010: if (RVF) collect_instr_o.op  = FLW;
                                     else illegal_instr = 1'b1;
-                            3'b011: if (RVD) getresult_scoreboard_entry.op  = FLD;
+                            3'b011: if (RVD) collect_instr_o.op  = FLD;
                                     else illegal_instr = 1'b1;
                             default: illegal_instr = 1'b1;
                         endcase
@@ -219,31 +220,31 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                 end
 
                 0010011: begin
-                    getresult_scoreboard_entry.fu  = ALU;
-               	    getresult_scoreboard_entry.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
-                    getresult_scoreboard_entry.use_imm = 1'b1;
-                    getresult_scoreboard_entry.rs1[4:0] = instr_test.itype.rs1;
-                    getresult_scoreboard_entry.rd[4:0]  = instr_test.itype.rd;
+                    collect_instr_o.fu  = ALU;
+               	    collect_instr_o.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
+                    collect_instr_o.use_imm = 1'b1;
+                    collect_instr_o.rs1[4:0] = instr_test.itype.rs1;
+                    collect_instr_o.rd[4:0]  = instr_test.itype.rd;
 
                     case (instr_test.itype.funct3)
-                        3'b000: getresult_scoreboard_entry.op = ADD;   // Add Immediate
-                        3'b010: getresult_scoreboard_entry.op = SLTS;  // Set to one if Lower Than Immediate
-                        3'b011: getresult_scoreboard_entry.op = SLTU;  // Set to one if Lower Than Immediate Unsigned
-                        3'b100: getresult_scoreboard_entry.op = XORL;  // Exclusive Or with Immediate
-                        3'b110: getresult_scoreboard_entry.op = ORL;   // Or with Immediate
-                        3'b111: getresult_scoreboard_entry.op = ANDL;  // And with Immediate
+                        3'b000: collect_instr_o.op = ADD;   // Add Immediate
+                        3'b010: collect_instr_o.op = SLTS;  // Set to one if Lower Than Immediate
+                        3'b011: collect_instr_o.op = SLTU;  // Set to one if Lower Than Immediate Unsigned
+                        3'b100: collect_instr_o.op = XORL;  // Exclusive Or with Immediate
+                        3'b110: collect_instr_o.op = ORL;   // Or with Immediate
+                        3'b111: collect_instr_o.op = ANDL;  // And with Immediate
 
                         3'b001: begin
-                          getresult_scoreboard_entry.op = SLL;  // Shift Left Logical by Immediate
+                          collect_instr_o.op = SLL;  // Shift Left Logical by Immediate
                           if (instr_test.instr[31:26] != 6'b0)
                             illegal_instr = 1'b1;
                         end
 
                         3'b101: begin
                             if (instr_test.instr[31:26] == 6'b0)
-                                getresult_scoreboard_entry.op = SRL;  // Shift Right Logical by Immediate
+                                collect_instr_o.op = SRL;  // Shift Right Logical by Immediate
                             else if (instr_test.instr[31:26] == 6'b010_000)
-                                getresult_scoreboard_entry.op = SRA;  // Shift Right Arithmetically by Immediate
+                                collect_instr_o.op = SRA;  // Shift Right Arithmetically by Immediate
                             else
                                 illegal_instr = 1'b1;
                         end
@@ -252,29 +253,30 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 
 	endcase
 
-        getresult_scoreboard_entry.ex      = ex_i;
-        getresult_scoreboard_entry.valid   = ex_i.valid;
+        collect_instr_o.ex      = ex_i;
+        collect_instr_o.valid   = ex_i.valid;
         if (~ex_i.valid) begin
-            getresult_scoreboard_entry.ex.tval  = (is_compressed_i) ? {48'b0, compressed_instr_i} : {32'b0, instruction_i};
+            collect_instr_o.ex.tval  = (is_compressed_i) ? {48'b0, compressed_instr_i} : {32'b0, instruction_i};
             if (illegal_instr || is_illegal_i) begin
-                getresult_scoreboard_entry.valid    = 1'b1;
-                getresult_scoreboard_entry.ex.valid = 1'b1;
-                getresult_scoreboard_entry.ex.cause = riscv::ILLEGAL_INSTR;
+                collect_instr_o.valid    = 1'b1;
+                collect_instr_o.ex.valid = 1'b1;
+                collect_instr_o.ex.cause = riscv::ILLEGAL_INSTR;
             end else if (ecall) begin
-                getresult_scoreboard_entry.valid    = 1'b1;
-                getresult_scoreboard_entry.ex.valid = 1'b1;
+                collect_instr_o.valid    = 1'b1;
+                collect_instr_o.ex.valid = 1'b1;
                 case (priv_lvl_i)
-                    riscv::PRIV_LVL_M: getresult_scoreboard_entry.ex.cause = riscv::ENV_CALL_MMODE;
-                    riscv::PRIV_LVL_S: getresult_scoreboard_entry.ex.cause = riscv::ENV_CALL_SMODE;
-                    riscv::PRIV_LVL_U: getresult_scoreboard_entry.ex.cause = riscv::ENV_CALL_UMODE;
+                    riscv::PRIV_LVL_M: collect_instr_o.ex.cause = riscv::ENV_CALL_MMODE;
+                    riscv::PRIV_LVL_S: collect_instr_o.ex.cause = riscv::ENV_CALL_SMODE;
+                    riscv::PRIV_LVL_U: collect_instr_o.ex.cause = riscv::ENV_CALL_UMODE;
                     default:; // this should not happen
                 endcase
             end else if (ebreak) begin
-                getresult_scoreboard_entry.valid    = 1'b1;
-                getresult_scoreboard_entry.ex.valid = 1'b1;
-                getresult_scoreboard_entry.ex.cause = riscv::BREAKPOINT;
+                collect_instr_o.valid    = 1'b1;
+                collect_instr_o.ex.valid = 1'b1;
+                collect_instr_o.ex.cause = riscv::BREAKPOINT;
             end
         end
+	return collect_instr_o;
 endfunction
 
 
