@@ -1,6 +1,6 @@
 import ariane_pkg::*;
 interface dut_in;
-    logic           	clk, rst_n;
+    logic           	clk, reset_n;
     logic [63:0]        pc_i;                    
     logic               is_compressed_i;
     logic [15:0]        compressed_instr_i;     

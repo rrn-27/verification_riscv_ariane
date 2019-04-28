@@ -236,8 +236,8 @@ class decoder_env extends uvm_env;
     endfunction: build_phase
 
     function void connect_phase(uvm_phase phase);
-        decoder_agent_in_h.aport.connect(decoder_subscriber_in_h.analysis_export);
-        decoder_agent_out_h.aport.connect(decoder_subscriber_out_h.analysis_export);
+        //decoder_agent_in_h.aport.connect(decoder_subscriber_in_h.analysis_export);
+       // decoder_agent_out_h.aport.connect(decoder_subscriber_out_h.analysis_export);
         decoder_agent_in_h.aport.connect(decoder_scoreboard_h.sb_in);
         decoder_agent_out_h.aport.connect(decoder_scoreboard_h.sb_out);
     endfunction: connect_phase

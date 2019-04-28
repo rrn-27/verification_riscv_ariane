@@ -43,7 +43,7 @@ class decoder_scoreboard extends uvm_scoreboard;
     endtask: run
 
     extern virtual function scoreboard_entry_t getresult_scoreboard_entry; 
-    extern virtual function getresult_cntrl_flow; 
+    extern virtual function logic getresult_cntrl_flow; 
     extern virtual function void compare;
         
 endclass: decoder_scoreboard
@@ -59,7 +59,7 @@ function void decoder_scoreboard::compare;
 
     scoreboard_entry_t instr_check;
     scoreboard_entry_t instr_output;
-    instr_check = get_scoreboard_entry();
+    instr_check = getresult_scoreboard_entry();
     instr_output = tx_out.instruction_o;
 
     if(instr_check.pc != instr_output.pc) begin
@@ -79,7 +79,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
     //Modify this function to return a 34-bit result {VOUT, COUT,OUT[31:0]} which is
     //consistent with the given spec.
 
-    logic           	clk, rst_n;
+    logic           	clk, reset_n;
     logic [63:0]        pc_i;                    
     logic               is_compressed_i;
     logic [15:0]        compressed_instr_i;     
@@ -258,10 +258,11 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 endfunction
 
 
-function decoder_scoreboard::getresult_cntrl_flow;
+function logic decoder_scoreboard::getresult_cntrl_flow;
     logic [31:0]        instruction_i;           
 
     instruction_i = tx_in.instruction_i;
+    getresult_cntrl_flow = 1;
 
 endfunction
 

@@ -9,7 +9,7 @@ ver-library    ?= work-ver
 # library for DPI
 dpi-library    ?= work-dpi
 # Top level module to compile
-top_level      ?= jrs_tb
+top_level      ?= top
 # Maximum amount of cycles for a successful simulation run
 max_cycles     ?= 10000000
 # Test case to run
@@ -176,7 +176,7 @@ fpga_src :=  $(wildcard fpga/src/*.sv) $(wildcard fpga/src/bootrom/*.sv) $(wildc
 fpga_src := $(addprefix $(root-dir), $(fpga_src))
 
 # look for testbenches
-tbs := tb_new/interfaces.sv tb_new/sequences.sv  tb_new/scoreboard.sv tb_new/modules.sv tb_new/tests.sv  tb_new/tb.sv
+tbs := tb_new/interfaces.sv tb_new/sequences.sv  tb_new/scoreboard.sv tb_new/modules.sv tb_new/tests.sv  tb_new/tb_uvm.sv
 # RISCV asm tests and benchmark setup (used for CI)
 # there is a definesd test-list with selected CI tests
 riscv-test-dir            := tmp/riscv-tests/build/isa/

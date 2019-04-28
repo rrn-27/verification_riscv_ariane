@@ -35,9 +35,9 @@ import ariane_pkg::*;
             super.new(name);
         endfunction: new
 
-        function string convert2string;
+      /*  function string convert2string;
             convert2string={$sformatf("Operand A = %b, Operand B = %b, Opcode = %b, CIN = %b",A,B,opcode,CIN)};
-        endfunction: convert2string
+        endfunction: convert2string*/
 
     endclass: decoder_transaction_in
 
@@ -53,9 +53,9 @@ import ariane_pkg::*;
             super.new(name);
         endfunction: new;
         
-        function string convert2string;
+       /* function string convert2string;
             convert2string={$sformatf("OUT = %b, COUT = %b, VOUT = %b",OUT,COUT,VOUT)};
-        endfunction: convert2string
+        endfunction: convert2string*/
 
     endclass: decoder_transaction_out
 
