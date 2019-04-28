@@ -128,14 +128,14 @@ package ariane_pkg;
 
     // static debug hartinfo
 // REVISIT - Commented since the Debug is not required
-  /*  localparam dm::hartinfo_t DebugHartInfo = '{
+    localparam dm::hartinfo_t DebugHartInfo = '{
                                                 zero1:        '0,
                                                 nscratch:      2, // Debug module needs at least two scratch regs
                                                 zero0:        '0,
                                                 dataaccess: 1'b1, // data registers are memory mapped in the debugger
                                                 datasize: dm::DataCount,
                                                 dataaddr: dm::DataAddr
-                                              };*/
+                                              };
 
     // enables a commit log which matches spikes commit log format for easier trace comparison
     localparam bit ENABLE_SPIKE_COMMIT_LOG = 1'b1;

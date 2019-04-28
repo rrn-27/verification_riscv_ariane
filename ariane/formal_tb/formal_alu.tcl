@@ -3,7 +3,7 @@
 clear -all
 
 #Reading the files (.v and .sv) 
-analyze -sv ../include/riscv_pkg.sv ../include/ariane_pkg.sv ../src/alu.sv
+analyze -sv ../src/riscv-dbg/src/dm_pkg.sv ../include/riscv_pkg.sv ../include/ariane_pkg.sv ../src/alu.sv
 analyze -sv bind_wrapper.sv
 
 #Elaborating the design, specify the top module
