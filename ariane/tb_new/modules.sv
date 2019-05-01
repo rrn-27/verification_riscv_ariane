@@ -143,6 +143,7 @@ class decoder_monitor_out extends uvm_monitor;
 
     task run_phase(uvm_phase phase);
     @(posedge dut_vi_out.clk);
+    @(posedge dut_vi_out.clk);
       forever
       begin
         decoder_transaction_out tx;

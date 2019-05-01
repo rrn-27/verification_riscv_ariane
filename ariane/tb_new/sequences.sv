@@ -46,7 +46,7 @@ import ariane_pkg::*;
             convert2string={$sformatf("Instruction = %b",instruction_i)};
         endfunction: convert2string
 	
-	function post_randomize();
+	function void post_randomize();
 		if(opcode == 7'b0100011) begin
 			instruction_i[31:0] = {imm[11:5],rs2[4:0],rs1[4:0],funct3,imm[4:0],opcode};
 		end

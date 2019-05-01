@@ -63,13 +63,21 @@ function void decoder_scoreboard::compare;
     instr_output = tx_out.instruction_o;
 
     if(instr_check.pc != instr_output.pc) begin
-	`uvm_info("Compare_failed",$sformatf("Expected = %b Got = %b",instr_check.pc,instr_output.pc),UVM_LOW);
-
-//|| (instr_check.fu != instr_output.fu) || (instr_check.op != instr_output.op) || (instr_check.rs1 != instr_output.rs1) || (instr_check.rs2 != instr_output.rs2) || (instr_check.rd != instr_output.rd) || (instr_check.result != instr_output.result) || (instr_check.valid != instr_output.valid) || (instr_check.use_imm != instr_output.use_imm) || (instr_check.use_pc != instr_output.use_pc) ||  (instr_check.bp != instr_output.bp) || (instr_check.is_compressed != instr_output.is_compressed)) begin
+	`uvm_info("Compare_failed",$sformatf("Expected PC = %b Got PC = %b",instr_check.pc,instr_output.pc),UVM_LOW);
     end
+    else if(instr_check.fu != instr_output.fu) begin
+	`uvm_info("Compare_failed",$sformatf("Expected FU= %b Got FU = %b",instr_check.fu,instr_output.fu),UVM_LOW);
+    end
+    else if(instr_check.op != instr_output.op) begin
+	`uvm_info("Compare_failed",$sformatf("Expected OP = %b Got OP = %b",instr_check.op,instr_output.op),UVM_LOW);
+    end
+   
+
+// (instr_check.rs1 != instr_output.rs1) || (instr_check.rs2 != instr_output.rs2) || (instr_check.rd != instr_output.rd) || (instr_check.result != instr_output.result) || (instr_check.valid != instr_output.valid) || (instr_check.use_imm != instr_output.use_imm) || (instr_check.use_pc != instr_output.use_pc) ||  (instr_check.bp != instr_output.bp) || (instr_check.is_compressed != instr_output.is_compressed)) begin
     else begin
-	`uvm_info("Compare_success","Decoder output equal",UVM_LOW);
-//	`uvm_info("Compare_success",tx_out.convert2string(),UVM_LOW);
+//	`uvm_info("Compare_success","Decoder output equal",UVM_LOW);
+//	`uvm_info("Compare_success",$sformatf("Expected = %b Got = %b",instr_check.pc,instr_output.pc),UVM_LOW);
+//	`uvm_info("Compare_success",$sformatf("Expected = %b Got = %b",instr_check.fu,instr_output.fu),UVM_LOW);
     end
 
 endfunction
@@ -97,6 +105,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 //REVISIT this
     logic ecall;
     logic ebreak;              
+    logic check_fprm;              
     riscv::instruction_t instr_test;
     scoreboard_entry_t collect_instr_o;
 
@@ -119,7 +128,6 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 	
         collect_instr_o.result        = 64'b0;
         collect_instr_o.use_imm        = 1'b0;
-       // is_control_flow_instr_o     = 1'b0;
         illegal_instr               = 1'b0;
         collect_instr_o.pc            = pc_i;
         collect_instr_o.trans_id      = 5'b0;
@@ -135,7 +143,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         collect_instr_o.bp            = branch_predict_i;
         ecall                       = 1'b0;
         ebreak                      = 1'b0;
-        //check_fprm                  = 1'b0;
+        check_fprm                  = 1'b0;
 
             case (instr_test.rtype.opcode)
                0100011: begin
@@ -282,10 +290,31 @@ endfunction
 
 function logic decoder_scoreboard::getresult_cntrl_flow;
     logic [31:0]        instruction_i;           
+    logic is_control_flow;
+    riscv::instruction_t instr_test;
 
     instruction_i = tx_in.instruction_i;
-    getresult_cntrl_flow = 1;
-
+    instr_test = riscv::instruction_t'(instruction_i);
+    case (instr_test.rtype.opcode)
+	1100011: begin
+ 		is_control_flow = 1'b1;
+                case (instr_test.stype.funct3)
+		3'b010,3'b011: begin
+                	is_control_flow = 1'b0;
+		end
+		endcase
+	end
+	1100111: begin
+ 		is_control_flow = 1'b1;
+	end
+	1101111: begin
+ 		is_control_flow = 1'b1;
+	end
+	default: begin
+ 		is_control_flow = 1'b0;
+	end
+    endcase
+	return is_control_flow;
 endfunction
 
 endpackage: scoreboard

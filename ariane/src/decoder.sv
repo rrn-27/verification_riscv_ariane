@@ -1000,12 +1000,12 @@ module decoder (
                 default: illegal_instr = 1'b1;
             endcase
         end
-    end
+    //end
 
     // --------------------------------
     // Sign extend immediate
     // --------------------------------
-    always @(posedge clk) begin : sign_extend
+    //always @(posedge clk) begin : sign_extend
         imm_i_type  = i_imm(instruction_i);
         imm_s_type  = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
         imm_sb_type = sb_imm(instruction_i);
