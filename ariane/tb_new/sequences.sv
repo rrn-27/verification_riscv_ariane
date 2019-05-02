@@ -33,6 +33,7 @@ import ariane_pkg::*;
 	
         //TODO: Add constraints here
 
+      	constraint restrict_ex_valid {(ex_i.valid == 0);} // Restrict for no exception case
       	constraint restrict_load_store {((opcode ==7'b0100011) || (opcode ==7'b0000011));}
       	constraint restrict_store_legal {(opcode ==7'b0100011)->((funct3 == 3'b000) ||(funct3 == 3'b001) || (funct3 == 3'b010) || (funct3 == 3'b011));}
       	constraint restrict_load_legal {(opcode ==7'b0000011)->((funct3 == 3'b000) ||(funct3 == 3'b001) || (funct3 == 3'b010) || (funct3 == 3'b011) || (funct3 == 3'b100) || (funct3 == 3'b101) || (funct3 == 3'b110));}

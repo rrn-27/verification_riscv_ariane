@@ -71,9 +71,22 @@ function void decoder_scoreboard::compare;
     else if(instr_check.op != instr_output.op) begin
 	`uvm_info("Compare_failed",$sformatf("Expected OP = %b Got OP = %b",instr_check.op,instr_output.op),UVM_LOW);
     end
+    else if(instr_check.rs1 != instr_output.rs1) begin
+	`uvm_info("Compare_failed",$sformatf("Expected RS1 = %b Got RS1 = %b",instr_check.rs1,instr_output.rs1),UVM_LOW);
+    end
+    else if(instr_check.rs2 != instr_output.rs2) begin
+	`uvm_info("Compare_failed",$sformatf("Expected RS2 = %b Got RS2 = %b",instr_check.rs2,instr_output.rs2),UVM_LOW);
+    end
+    else if(instr_check.rd != instr_output.rd) begin
+	`uvm_info("Compare_failed",$sformatf("Expected RD = %b Got RD = %b",instr_check.rd,instr_output.rd),UVM_LOW);
+    end
+    else if(instr_check.result != instr_output.result) begin
+	`uvm_info("Compare_failed",$sformatf("Expected Result = %b Got Result = %b",instr_check.rd,instr_output.rd),UVM_LOW);
+    end
+   
    
 
-// (instr_check.rs1 != instr_output.rs1) || (instr_check.rs2 != instr_output.rs2) || (instr_check.rd != instr_output.rd) || (instr_check.result != instr_output.result) || (instr_check.valid != instr_output.valid) || (instr_check.use_imm != instr_output.use_imm) || (instr_check.use_pc != instr_output.use_pc) ||  (instr_check.bp != instr_output.bp) || (instr_check.is_compressed != instr_output.is_compressed)) begin
+//  || (instr_check.result != instr_output.result) || (instr_check.valid != instr_output.valid) || (instr_check.use_imm != instr_output.use_imm) || (instr_check.use_pc != instr_output.use_pc) ||  (instr_check.bp != instr_output.bp) || (instr_check.is_compressed != instr_output.is_compressed)) begin
     else begin
 //	`uvm_info("Compare_success","Decoder output equal",UVM_LOW);
 //	`uvm_info("Compare_success",$sformatf("Expected = %b Got = %b",instr_check.pc,instr_output.pc),UVM_LOW);
@@ -145,8 +158,9 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         ebreak                      = 1'b0;
         check_fprm                  = 1'b0;
 
+        if (~ex_i.valid) begin
             case (instr_test.rtype.opcode)
-               0100011: begin
+               7'b0100011: begin
                     collect_instr_o.fu  = STORE;
                     collect_instr_o.use_imm = 1 ;
                     collect_instr_o.result = {{52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7]};
@@ -161,7 +175,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                     endcase
                 end
 
-                0000011: begin
+                7'b0000011: begin
                     collect_instr_o.fu  = LOAD;
                	    collect_instr_o.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
                     collect_instr_o.use_imm = 1'b1;
@@ -179,7 +193,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                     endcase
                 end
 
-                0100111: begin
+                7'b0100111: begin
                     if (FP_PRESENT && fs_i != riscv::Off) begin 
                         collect_instr_o.fu  = STORE;
                         collect_instr_o.result = {{52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7]};
@@ -203,7 +217,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                         illegal_instr = 1'b1;
                 end
 
-                0000111: begin
+                7'b0000111: begin
                     if (FP_PRESENT && fs_i != riscv::Off) begin // only generate decoder if FP extensions are enabled (static)
                         collect_instr_o.fu  = LOAD;
                	        collect_instr_o.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
@@ -227,7 +241,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                         illegal_instr = 1'b1;
                 end
 
-                0010011: begin
+                7'b0010011: begin
                     collect_instr_o.fu  = ALU;
                	    collect_instr_o.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
                     collect_instr_o.use_imm = 1'b1;
@@ -260,6 +274,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                 end
 
 	endcase
+      end
 
         collect_instr_o.ex      = ex_i;
         collect_instr_o.valid   = ex_i.valid;
@@ -284,6 +299,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                 collect_instr_o.ex.cause = riscv::BREAKPOINT;
             end
         end
+	//`uvm_info("Scoreboard function",$sformatf("Instruction FU = %b",collect_instr_o.fu),UVM_LOW);
 	return collect_instr_o;
 endfunction
 
