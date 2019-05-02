@@ -3,8 +3,8 @@ package coverage;
 import sequences::*;
 import uvm_pkg::*;
 
-class alu_subscriber_in extends uvm_subscriber #(alu_transaction_in);
-    `uvm_component_utils(alu_subscriber_in)
+class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
+    `uvm_component_utils(decoder_subscriber_in)
 
     //Declare Variables
   /*  logic [31:0] A;
@@ -49,7 +49,7 @@ class alu_subscriber_in extends uvm_subscriber #(alu_transaction_in);
         
     endfunction: new
 
-    function void write(alu_transaction_in t);
+    function void write(decoder_transaction_in t);
        /* A={t.A};
         B={t.B};
         opcode={t.opcode};
@@ -75,10 +75,10 @@ class alu_subscriber_in extends uvm_subscriber #(alu_transaction_in);
         
     endfunction: write
 
-endclass: alu_subscriber_in
+endclass: decoder_subscriber_in
 
-class alu_subscriber_out extends uvm_subscriber #(alu_transaction_out);
-    `uvm_component_utils(alu_subscriber_out)
+class decoder_subscriber_out extends uvm_subscriber #(decoder_transaction_out);
+    `uvm_component_utils(decoder_subscriber_out)
 
    /* logic [31:0] out;
     logic cout;
@@ -105,7 +105,7 @@ function new(string name, uvm_component parent);
     
 endfunction: new
 
-function void write(alu_transaction_out t);
+function void write(decoder_transaction_out t);
   /*  out={t.OUT};
     cout={t.COUT};
     vout={t.VOUT};*/
@@ -118,6 +118,6 @@ function void write(alu_transaction_out t);
     outputs.sample();
 
 endfunction: write
-endclass: alu_subscriber_out
+endclass: decoder_subscriber_out
 
 endpackage: coverage
