@@ -132,6 +132,79 @@ class seq_atom extends uvm_sequence #(decoder_transaction_in);
         endtask: body
     endclass: seq_atom
 
+class seq_32_regreg extends uvm_sequence #(decoder_transaction_in);
+        `uvm_object_utils(seq_32_regreg)
+
+        function new(string name = "");
+            super.new(name);
+        endfunction: new
+
+        task body;
+            decoder_transaction_in tx;
+            tx=decoder_transaction_in::type_id::create("tx");
+	    tx.restrict_ex_valid.constraint_mode(1);
+      	    tx.restrict_load_store.constraint_mode(0);
+      	    tx.restrict_store_legal.constraint_mode(0);
+      	    tx.restrict_load_legal.constraint_mode(0);
+	    tx.restrict_atomic_legal.constraint_mode(1);
+	    tx.restrict_32_regreg.constraint_mode(1);
+	    tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+	    tx.restrict_control_legal.constraint_mode(0);
+            start_item(tx);
+            assert(tx.randomize());
+            finish_item(tx);
+        endtask: body
+    endclass: seq_32_regreg
+
+class seq_fp_32_regreg extends uvm_sequence #(decoder_transaction_in);
+        `uvm_object_utils(seq_fp_32_regreg)
+
+        function new(string name = "");
+            super.new(name);
+        endfunction: new
+
+        task body;
+            decoder_transaction_in tx;
+            tx=decoder_transaction_in::type_id::create("tx");
+	    tx.restrict_ex_valid.constraint_mode(1);
+      	    tx.restrict_load_store.constraint_mode(0);
+      	    tx.restrict_store_legal.constraint_mode(0);
+      	    tx.restrict_load_legal.constraint_mode(0);
+	    tx.restrict_atomic_legal.constraint_mode(0);
+	    tx.restrict_32_regreg.constraint_mode(0);
+	    tx.restrict_fp_32_regreg_legal.constraint_mode(1);
+	    tx.restrict_control_legal.constraint_mode(0);
+            start_item(tx);
+            assert(tx.randomize());
+            finish_item(tx);
+        endtask: body
+    endclass: seq_fp_32_regreg
+
+class seq_control extends uvm_sequence #(decoder_transaction_in);
+        `uvm_object_utils(seq_control)
+
+        function new(string name = "");
+            super.new(name);
+        endfunction: new
+
+        task body;
+            decoder_transaction_in tx;
+            tx=decoder_transaction_in::type_id::create("tx");
+	    tx.restrict_ex_valid.constraint_mode(1);
+      	    tx.restrict_load_store.constraint_mode(0);
+      	    tx.restrict_store_legal.constraint_mode(0);
+      	    tx.restrict_load_legal.constraint_mode(0);
+	    tx.restrict_atomic_legal.constraint_mode(0);
+	    tx.restrict_32_regreg.constraint_mode(0);
+	    tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+	    tx.restrict_control_legal.constraint_mode(1);
+            start_item(tx);
+            assert(tx.randomize());
+            finish_item(tx);
+        endtask: body
+    endclass: seq_control
+
+
     class seq_of_commands extends uvm_sequence #(decoder_transaction_in);
         `uvm_object_utils(seq_of_commands)
         `uvm_declare_p_sequencer(uvm_sequencer#(decoder_transaction_in))
@@ -145,9 +218,15 @@ class seq_atom extends uvm_sequence #(decoder_transaction_in);
             begin
                 simple_seq seq;
            	seq_atom seq2;
+           	seq_32_regreg seq3;
+           	seq_fp_32_regreg seq4;
+           	seq_control seq5;
                 
 		seq = simple_seq::type_id::create("seq");
                 seq2 = seq_atom::type_id::create("seq2");
+                seq3 = seq_32_regreg::type_id::create("seq3");
+                seq4 = seq_fp_32_regreg::type_id::create("seq4");
+                seq5 = seq_control::type_id::create("seq5");
 
 
                 assert( seq.randomize() );
@@ -155,6 +234,15 @@ class seq_atom extends uvm_sequence #(decoder_transaction_in);
 
 	        assert( seq2.randomize() );
                 seq2.start(p_sequencer);
+
+	        assert( seq3.randomize() );
+                seq3.start(p_sequencer);
+
+	        assert( seq4.randomize() );
+                seq4.start(p_sequencer);
+
+	        assert( seq5.randomize() );
+                seq5.start(p_sequencer);
 
             end
         endtask: body
