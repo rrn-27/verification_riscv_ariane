@@ -28,8 +28,8 @@ import ariane_pkg::*;
     	rand riscv::xs_t         fs_i;               
     	rand logic [2:0]         frm_i;                   
     	rand logic               tvm_i;                   
-    	rand logic               tw_i;                   
-	
+    	rand logic               tw_i; 
+	rand logic [24:0]	 rest_i;                  
 	
         //TODO: Add constraints here
 
@@ -57,6 +57,9 @@ import ariane_pkg::*;
 		end
 		else if(opcode == 7'b0000011) begin
 			instruction_i[31:0] = {imm[11:0],rs1,funct3,rd[4:0],opcode};
+		end
+		else begin
+			instruction_i[31:0] = {rest_i,opcode};
 		end
 	endfunction: post_randomize
 
@@ -129,167 +132,6 @@ class seq_atom extends uvm_sequence #(decoder_transaction_in);
         endtask: body
     endclass: seq_atom
 
-
-/*class simple_seq_4 extends uvm_sequence #(decoder_transaction_in);
-        `uvm_object_utils(simple_seq_4)
-
-        function new(string name = "");
-            super.new(name);
-        endfunction: new
-
-        task body;
-            decoder_transaction_in tx;
-            tx=decoder_transaction_in::type_id::create("tx");
-            tx.restrict_arith_add_sub.constraint_mode(0);
-            tx.restrict_shift_operations.constraint_mode(0);
-            tx.restrict_compare.constraint_mode(0);
-            tx.restrict_logical.constraint_mode(1);
-            tx.restrict_unused.constraint_mode(0);
-            start_item(tx);
-            assert(tx.randomize());
-            finish_item(tx);
-        endtask: body
-    endclass: simple_seq_4
-
-
-class simple_seq_5 extends uvm_sequence #(decoder_transaction_in);
-        `uvm_object_utils(simple_seq_5)
-
-        function new(string name = "");
-            super.new(name);
-        endfunction: new
-
-        task body;
-            decoder_transaction_in tx;
-            tx=decoder_transaction_in::type_id::create("tx");
-            tx.restrict_arith_add_sub.constraint_mode(0);
-            tx.restrict_shift_operations.constraint_mode(0);
-            tx.restrict_compare.constraint_mode(0);
-            tx.restrict_logical.constraint_mode(0);
-            tx.restrict_unused.constraint_mode(1);
-            start_item(tx);
-            assert(tx.randomize());
-            finish_item(tx);
-        endtask: body
-    endclass: simple_seq_5
-
-class simple_seq_6 extends uvm_sequence #(decoder_transaction_in);
-        `uvm_object_utils(simple_seq_6)
-
-        function new(string name = "");
-            super.new(name);
-        endfunction: new
-
-        task body;
-            decoder_transaction_in tx;
-            tx=decoder_transaction_in::type_id::create("tx");
-            tx.restrict_arith_add_sub.constraint_mode(0);
-            tx.restrict_shift_operations.constraint_mode(0);
-            tx.restrict_compare.constraint_mode(0);
-            tx.restrict_logical.constraint_mode(0);
-            tx.restrict_unused.constraint_mode(0);
-            tx.rst_set.constraint_mode(0);
-            start_item(tx);
-            assert(tx.randomize());
-            finish_item(tx);
-        endtask: body
-    endclass: simple_seq_6
-
-
-    class simple_seq_random extends uvm_sequence #(decoder_transaction_in);
-        `uvm_object_utils(simple_seq_random)
-
-        function new(string name = "");
-            super.new(name);
-        endfunction: new
-
-        task body;
-            decoder_transaction_in tx;
-            tx=decoder_transaction_in::type_id::create("tx");
-            tx.restrict_arith_add_sub.constraint_mode(1);
-            tx.arith_add_sub_bug_a.constraint_mode(0);
-            tx.arith_add_sub_bug_b.constraint_mode(0);
-            tx.restrict_shift_operations.constraint_mode(0);
-            tx.restrict_compare.constraint_mode(0);
-            tx.restrict_logical.constraint_mode(0);
-            tx.restrict_unused.constraint_mode(0);
-            start_item(tx);
-            assert(tx.randomize());
-            finish_item(tx);
-        endtask: body
-    endclass: simple_seq_random
-
-class simple_seq_2_random extends uvm_sequence #(decoder_transaction_in);
-        `uvm_object_utils(simple_seq_2_random)
-
-        function new(string name = "");
-            super.new(name);
-        endfunction: new
-
-        task body;
-            decoder_transaction_in tx;
-            tx=decoder_transaction_in::type_id::create("tx");
-            tx.restrict_arith_add_sub.constraint_mode(0);
-            tx.restrict_shift_operations.constraint_mode(1);
-            tx.shift_bug_a.constraint_mode(0);
-            tx.shift_bug_b.constraint_mode(0);
-            tx.restrict_compare.constraint_mode(0);
-            tx.restrict_logical.constraint_mode(0);
-            tx.restrict_unused.constraint_mode(0);
-            start_item(tx);
-            assert(tx.randomize());
-            finish_item(tx);
-        endtask: body
-    endclass: simple_seq_2_random
-
-
-class simple_seq_3_random extends uvm_sequence #(decoder_transaction_in);
-        `uvm_object_utils(simple_seq_3_random)
-
-        function new(string name = "");
-            super.new(name);
-        endfunction: new
-
-        task body;
-            decoder_transaction_in tx;
-            tx=decoder_transaction_in::type_id::create("tx");
-            tx.restrict_arith_add_sub.constraint_mode(0);
-            tx.restrict_shift_operations.constraint_mode(0);
-            tx.restrict_compare.constraint_mode(1);
-            tx.compare_bug_a.constraint_mode(0);
-            tx.compare_bug_b.constraint_mode(0);
-            tx.restrict_logical.constraint_mode(0);
-            tx.restrict_unused.constraint_mode(0);
-            start_item(tx);
-            assert(tx.randomize());
-            finish_item(tx);
-        endtask: body
-    endclass: simple_seq_3_random
-
-class simple_seq_4_random extends uvm_sequence #(decoder_transaction_in);
-        `uvm_object_utils(simple_seq_4_random)
-
-        function new(string name = "");
-            super.new(name);
-        endfunction: new
-
-        task body;
-            decoder_transaction_in tx;
-            tx=decoder_transaction_in::type_id::create("tx");
-            tx.restrict_arith_add_sub.constraint_mode(0);
-            tx.restrict_shift_operations.constraint_mode(0);
-            tx.restrict_compare.constraint_mode(0);
-            tx.restrict_logical.constraint_mode(1);
-            tx.logical_bug_a.constraint_mode(0);
-            tx.logical_bug_b.constraint_mode(0);
-            tx.restrict_unused.constraint_mode(0);
-            start_item(tx);
-            assert(tx.randomize());
-            finish_item(tx);
-        endtask: body
-    endclass: simple_seq_4_random*/
-
-
     class seq_of_commands extends uvm_sequence #(decoder_transaction_in);
         `uvm_object_utils(seq_of_commands)
         `uvm_declare_p_sequencer(uvm_sequencer#(decoder_transaction_in))
@@ -302,10 +144,17 @@ class simple_seq_4_random extends uvm_sequence #(decoder_transaction_in);
             repeat(15000)
             begin
                 simple_seq seq;
-                seq = simple_seq::type_id::create("seq");
+           	seq_atom seq2;
+                
+		seq = simple_seq::type_id::create("seq");
+                seq2 = seq_atom::type_id::create("seq2");
+
 
                 assert( seq.randomize() );
                 seq.start(p_sequencer);
+
+	        assert( seq2.randomize() );
+                seq2.start(p_sequencer);
 
             end
         endtask: body
