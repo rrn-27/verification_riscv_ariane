@@ -37,6 +37,10 @@ import ariane_pkg::*;
       	constraint restrict_load_store {((opcode ==7'b0100011) || (opcode ==7'b0000011));}
       	constraint restrict_store_legal {(opcode ==7'b0100011)->((funct3 == 3'b000) ||(funct3 == 3'b001) || (funct3 == 3'b010) || (funct3 == 3'b011));}
       	constraint restrict_load_legal {(opcode ==7'b0000011)->((funct3 == 3'b000) ||(funct3 == 3'b001) || (funct3 == 3'b010) || (funct3 == 3'b011) || (funct3 == 3'b100) || (funct3 == 3'b101) || (funct3 == 3'b110));}
+	constraint restrict_atomic_legal{(opcode==7'b0101111);}
+	constraint restrict_32_regreg{(opcode==7'b0111011);}
+	constraint restrict_fp_32_regreg_legal{(opcode==7'b1000011)||(opcode==7'b1000111)|| (opcode==7'b1001011)||(opcode== 7'b1001111)||(opcode== 7'b1010011) ;}
+	constraint restrict_control_legal{(opcode==7'b1100011) || (opcode==7'b1100111) || (opcode==7'b1101111) || (opcode==7'b0010111) || (opcode==7'b0010111);}
  
 
         function new(string name = "");
@@ -86,14 +90,23 @@ import ariane_pkg::*;
         task body;
             decoder_transaction_in tx;
             tx=decoder_transaction_in::type_id::create("tx");
+	    tx.restrict_ex_valid.constraint_mode(1);
+      	    tx.restrict_load_store.constraint_mode(1);
+      	    tx.restrict_store_legal.constraint_mode(1);
+      	    tx.restrict_load_legal.constraint_mode(1);
+	    tx.restrict_atomic_legal.constraint_mode(0);
+	    tx.restrict_32_regreg.constraint_mode(0);
+	    tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+	    tx.restrict_control_legal.constraint_mode(0);
+	    
             start_item(tx);
             assert(tx.randomize());
             finish_item(tx);
         endtask: body
     endclass: simple_seq
 
-/*class simple_seq_2 extends uvm_sequence #(decoder_transaction_in);
-        `uvm_object_utils(simple_seq_2)
+class seq_atom extends uvm_sequence #(decoder_transaction_in);
+        `uvm_object_utils(seq_atom)
 
         function new(string name = "");
             super.new(name);
@@ -102,40 +115,22 @@ import ariane_pkg::*;
         task body;
             decoder_transaction_in tx;
             tx=decoder_transaction_in::type_id::create("tx");
-            tx.restrict_arith_add_sub.constraint_mode(0);
-            tx.restrict_shift_operations.constraint_mode(1);
-            tx.restrict_compare.constraint_mode(0);
-            tx.restrict_logical.constraint_mode(0);
-            tx.restrict_unused.constraint_mode(0);
+	    tx.restrict_ex_valid.constraint_mode(1);
+      	    tx.restrict_load_store.constraint_mode(0);
+      	    tx.restrict_store_legal.constraint_mode(0);
+      	    tx.restrict_load_legal.constraint_mode(0);
+	    tx.restrict_atomic_legal.constraint_mode(1);
+	    tx.restrict_32_regreg.constraint_mode(0);
+	    tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+	    tx.restrict_control_legal.constraint_mode(0);
             start_item(tx);
             assert(tx.randomize());
             finish_item(tx);
         endtask: body
-    endclass: simple_seq_2
+    endclass: seq_atom
 
 
-class simple_seq_3 extends uvm_sequence #(decoder_transaction_in);
-        `uvm_object_utils(simple_seq_3)
-
-        function new(string name = "");
-            super.new(name);
-        endfunction: new
-
-        task body;
-            decoder_transaction_in tx;
-            tx=decoder_transaction_in::type_id::create("tx");
-            tx.restrict_arith_add_sub.constraint_mode(0);
-            tx.restrict_shift_operations.constraint_mode(0);
-            tx.restrict_compare.constraint_mode(1);
-            tx.restrict_logical.constraint_mode(0);
-            tx.restrict_unused.constraint_mode(0);
-            start_item(tx);
-            assert(tx.randomize());
-            finish_item(tx);
-        endtask: body
-    endclass: simple_seq_3
-
-class simple_seq_4 extends uvm_sequence #(decoder_transaction_in);
+/*class simple_seq_4 extends uvm_sequence #(decoder_transaction_in);
         `uvm_object_utils(simple_seq_4)
 
         function new(string name = "");
