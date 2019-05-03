@@ -2,6 +2,7 @@
 package coverage;
 import sequences::*;
 import uvm_pkg::*;
+import ariane_pkg::*;
 
 class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
     `uvm_component_utils(decoder_subscriber_in)
@@ -25,7 +26,6 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
     logic [2:0]         frm_i;                   
     logic               tvm_i;                   
     logic               tw_i;                    
-    logic               tsr_i;                   
 
 
 
@@ -68,7 +68,6 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
 	frm_i=t.frm_i;             
 	tvm_i=t.tvm_i;             
 	tw_i=t.tw_i;              
-	tsr_i=t.tsr_i;             
 
         // TODO: Uncomment
         inputs.sample();
