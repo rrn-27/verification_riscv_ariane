@@ -626,7 +626,332 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         	                illegal_instr = 1'b1;
         	            end
 		end
+//shvetha code
+	logic check_fprm = 1'b0;
 
+	////////////////////////////
+	//Integer Reg Instructions//	
+	///////////////////////////
+
+	riscv::OpcodeOp: begin
+		if (instr_test.rvftype.funct2 != 2'b10) begin
+	 		collect_instr_o.fu  = (instr_test.rtype.funct7 == 7'b000_0001) ? MULT : ALU;
+                        collect_instr_o.rs1 = instr_test.rtype.rs1;
+                        collect_instr_o.rs2 = instr_test.rtype.rs2;
+                        collect_instr_o.rd  = instr_test.rtype.rd;
+
+			if(instr_test.rtype.funct7 == 7'b000_0000)
+				case (instr_test.rtype.funct3)
+					3'b000 : collect_instr_o.op = ADD;   // Add
+                            	       	3'b010 : collect_instr_o.op = SLTS;  // Set Lower Than
+                            		3'b011 : collect_instr_o.op = SLTU;  // Set Lower Than Unsigned
+                            		3'b100 : collect_instr_o.op = XORL;  // Xor
+                            		3'b110 : collect_instr_o.op = ORL;   // Or
+                            		3'b111 : collect_instr_o.op = ANDL;  // And
+                            		3'b001 : collect_instr_o.op = SLL;   // Shift Left Logical
+                            		3'b101 : collect_instr_o.op = SRL;   // Shift Right Logical
+                               	endcase
+			end else if(instr_test.rtype.funct7 == 7'b000_0001)
+				// Multiplications
+				case(instr_test.rtype.funct3)
+                            		3'b000 : collect_instr_o.op = MUL;
+                            		3'b001 : collect_instr_o.op = MULH;
+                            		3'b010 : collect_instr_o.op = MULHSU;
+                            		3'b011 : collect_instr_o.op = MULHU;
+                            		3'b100 : collect_instr_o.op = DIV;
+                            		3'b101 : collect_instr_o.op = DIVU;
+                            		3'b110 : collect_instr_o.op = REM;
+                            		3'b111 : collect_instr_o.op = REMU;
+				endcase
+			end else if(instr_test.rtype.funct7 == 7'b010_0000)
+				case(instr_test.rtype.funct3)
+					3'b000 : collect_instr_o.op = SUB;   // Sub
+					3'b101 : collect_instr_o.op = SRA;   // Shift Right Arithmetic
+				endcase
+			end
+		/////////////////////////////
+		//Vectorial floating point//
+		////////////////////////////
+
+		end else if (instr_test.rvftype.funct == 2'b10) begin
+			if (FP_PRESENT && XFVEC && fs_i != riscv::Off) begin
+                            automatic logic allow_replication; // control honoring of replication flag
+
+                            collect_instr_o.fu       = FPU_VEC; // Same unit, but sets 'vectorial' signal
+                            collect_instr_o.rs1[4:0] = instr.rvftype.rs1;
+                            collect_instr_o.rs2[4:0] = instr.rvftype.rs2;
+                            collect_instr_o.rd[4:0]  = instr.rvftype.rd;
+                            check_fprm             = 1'b1;
+                            allow_replication      = 1'b1;
+
+                            // decode vectorial FP instruction
+                            case (instr_test.rvftype.vecfltop)
+                                5'b00001 : begin
+                                    collect_instr_o.op  = FADD; // vfadd.vfmt - Vectorial FP Addition
+                                    collect_instr_o.rs1 = '0;                // Operand A is set to 0
+                                    collect_instr_o.rs2 = instr_test.rvftype.rs1; // Operand B is set to rs1
+                                    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:20] };
+              			    collect_instr_o.use_imm = 1'b1;
+            			end
+			        5'b00010 : begin
+                                    collect_instr_o.op  = FSUB; // vfsub.vfmt - Vectorial FP Subtraction
+                                    collect_instr_o.rs1 = '0;                // Operand A is set to 0
+                                    collect_instr_o.rs2 = instr_test.rvftype.rs1; // Operand B is set to rs1
+                                    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:20] };
+              			    collect_instr_o.use_imm = 1'b1;
+                                end
+                                5'b00011 : collect_instr_o.op = FMUL; // vfmul.vfmt - Vectorial FP Multiplication
+                                5'b00100 : collect_instr_o.op = FDIV; // vfdiv.vfmt - Vectorial FP Division
+                                5'b00101 : begin
+                                    collect_instr_o.op = VFMIN; // vfmin.vfmt - Vectorial FP Minimum
+                                    check_fprm       = 1'b0;  // rounding mode irrelevant
+                                end
+                                5'b00110 : begin
+                                    collect_instr_o.op = VFMAX; // vfmax.vfmt - Vectorial FP Maximum
+                                    check_fprm       = 1'b0;  // rounding mode irrelevant
+                                end
+                                5'b00111 : begin
+                                    collect_instr_o.op  = FSQRT; // vfsqrt.vfmt - Vectorial FP Square Root
+                                    allow_replication = 1'b0;  // only one operand
+                                    if (instr_test.rvftype.rs2 != 5'b00000) illegal_instr = 1'b1; // rs2 must be 0
+                                end
+                                5'b01000 : begin
+                                    collect_instr_o.op = FMADD; // vfmac.vfmt - Vectorial FP Multiply-Accumulate
+                                    //imm_select       = SIMM;  // rd into result field (upper bits don't matter)
+                		    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
+			            collect_instr_o.use_imm = 1'b1;
+            			end
+                                5'b01001 : begin
+                                    collect_instr_o.op = FMSUB; // vfmre.vfmt - Vectorial FP Multiply-Reduce
+                                    //imm_select       = SIMM;  // rd into result field (upper bits don't matter)
+				    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
+			            collect_instr_o.use_imm = 1'b1;
+                                end
+                                5'b01100 : begin
+                                    case (instr_test.rvftype.rs2) inside // operation encoded in rs2, `inside` for matching ?
+                                        5'b00000 : begin
+                                            collect_instr_o.rs2 = instr_test.rvftype.rs1; // set rs2 = rs1 so we can map FMV to SGNJ in the unit
+                                            if (instr_test.rvftype.repl)
+                                                collect_instr_o.op = FMV_X2F; // vfmv.vfmt.x - GPR to FPR Move
+                                            else
+                                                collect_instr_o.op = FMV_F2X; // vfmv.x.vfmt - FPR to GPR Move
+                                                check_fprm = 1'b0;              // no rounding for moves
+                                        end
+                                        5'b00001 : begin
+                                            collect_instr_o.op  = FCLASS; // vfclass.vfmt - Vectorial FP Classify
+                                            check_fprm        = 1'b0;   // no rounding for classification
+                                            allow_replication = 1'b0;   // R must not be set
+                                        end
+                                        5'b00010 : collect_instr_o.op = FCVT_F2I; // vfcvt.x.vfmt - Vectorial FP to Int Conversion
+                                        5'b00011 : collect_instr_o.op = FCVT_I2F; // vfcvt.vfmt.x - Vectorial Int to FP Conversion
+                                        5'b001?? : begin
+                                            collect_instr_o.op  = FCVT_F2F; // vfcvt.vfmt.vfmt - Vectorial FP to FP Conversion
+                                            collect_instr_o.rs2 = instr.rvftype.rd; // set rs2 = rd as target vector for conversion
+                                            //imm_select        = IIMM;     // rs2 holds part of the intruction
+					    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:20] };
+	              			    collect_instr_o.use_imm = 1'b1;
+
+                                            // TODO CHECK R bit for valid fmt combinations
+                                            // determine source format
+                                            case (instr_test.rvftype.rs2[21:20])
+                                                // Only process instruction if corresponding extension is active (static)
+                                                2'b00: if (~RVFVEC)     illegal_instr = 1'b1;
+                                                2'b01: if (~XF16ALTVEC) illegal_instr = 1'b1;
+                                                2'b10: if (~XF16VEC)    illegal_instr = 1'b1;
+                                                2'b11: if (~XF8VEC)     illegal_instr = 1'b1;
+                                                default : illegal_instr = 1'b1;
+                                            endcase
+                                        end
+                                        default : illegal_instr = 1'b1;
+                                    endcase
+                                end
+                                5'b01101 : begin
+                                    check_fprm = 1'b0;         // no rounding for sign-injection
+                                    collect_instr_o.op = VFSGNJ; // vfsgnj.vfmt - Vectorial FP Sign Injection
+                                end
+                                5'b01110 : begin
+                                    check_fprm = 1'b0;          // no rounding for sign-injection
+                                    collect_instr_o.op = VFSGNJN; // vfsgnjn.vfmt - Vectorial FP Negated Sign Injection
+                                end
+                                5'b01111 : begin
+                                    check_fprm = 1'b0;          // no rounding for sign-injection
+                                    collect_instr_o.op = VFSGNJX; // vfsgnjx.vfmt - Vectorial FP XORed Sign Injection
+                                end
+                                5'b10000 : begin
+                                    check_fprm = 1'b0;          // no rounding for comparisons
+                                    collect_instr_o.op = VFEQ;    // vfeq.vfmt - Vectorial FP Equality
+                                end
+                                5'b10001 : begin
+                                    check_fprm = 1'b0;          // no rounding for comparisons
+                                    collect_instr_o.op = VFNE;    // vfne.vfmt - Vectorial FP Non-Equality
+                                end
+                                5'b10010 : begin
+                                    check_fprm = 1'b0;          // no rounding for comparisons
+                                    collect_instr_o.op = VFLT;    // vfle.vfmt - Vectorial FP Less Than
+                                end
+                                5'b10011 : begin
+                                    check_fprm = 1'b0;          // no rounding for comparisons
+                                    collect_instr_o.op = VFGE;    // vfge.vfmt - Vectorial FP Greater or Equal
+                                end
+                                5'b10100 : begin
+                                    check_fprm = 1'b0;          // no rounding for comparisons
+                                    collect_instr_o.op = VFLE;    // vfle.vfmt - Vectorial FP Less or Equal
+                                end
+                                5'b10101 : begin
+                                    check_fprm = 1'b0;          // no rounding for comparisons
+                                    collect_instr_o.op = VFGT;    // vfgt.vfmt - Vectorial FP Greater Than
+                                end
+                                5'b11000 : begin
+                                    collect_instr_o.op  = VFCPKAB_S; // vfcpka/b.vfmt.s - Vectorial FP Cast-and-Pack from 2x FP32, lowest 4 entries
+                                    //imm_select        = SIMM;      // rd into result field (upper bits don't matter)
+				    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
+			            collect_instr_o.use_imm = 1'b1;
+
+                                    if (~RVF) illegal_instr = 1'b1; // if we don't support RVF, we can't cast from FP32
+                                    // check destination format
+                                    case (instr_test.rvftype.vfmt)
+                                        // Only process instruction if corresponding extension is active and FLEN suffices (static)
+                                        2'b00: begin
+                                            if (~RVFVEC)            illegal_instr = 1'b1; // destination vector not supported
+                                            if (instr_test.rvftype.repl) illegal_instr = 1'b1; // no entries 2/3 in vector of 2 fp32
+                                        end
+                                        2'b01: begin
+                                            if (~XF16ALTVEC) illegal_instr = 1'b1; // destination vector not supported
+                                        end
+                                        2'b10: begin
+                                            if (~XF16VEC) illegal_instr = 1'b1; // destination vector not supported
+                                        end
+                                        2'b11: begin
+                                            if (~XF8VEC) illegal_instr = 1'b1; // destination vector not supported
+                                        end
+                                        default : illegal_instr = 1'b1;
+                                    endcase
+                                end
+                                5'b11001 : begin
+                                    collect_instr_o.op  = VFCPKCD_S; // vfcpkc/d.vfmt.s - Vectorial FP Cast-and-Pack from 2x FP32, second 4 entries
+                                    //imm_select        = SIMM;      // rd into result field (upper bits don't matter)
+				    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
+			            collect_instr_o.use_imm = 1'b1;
+
+                                    if (~RVF) illegal_instr = 1'b1; // if we don't support RVF, we can't cast from FP32
+                                    // check destination format
+                                    unique case (instr_test.rvftype.vfmt)
+                                        // Only process instruction if corresponding extension is active and FLEN suffices (static)
+                                        2'b00: illegal_instr = 1'b1; // no entries 4-7 in vector of 2 FP32
+                                        2'b01: illegal_instr = 1'b1; // no entries 4-7 in vector of 4 FP16ALT
+                                        2'b10: illegal_instr = 1'b1; // no entries 4-7 in vector of 4 FP16
+                                        2'b11: begin
+                                            if (~XF8VEC) illegal_instr = 1'b1; // destination vector not supported
+                                        end
+                                        default : illegal_instr = 1'b1;
+                                    endcase
+                                end
+                                5'b11010 : begin
+                                    collect_instr_o.op  = VFCPKAB_D; // vfcpka/b.vfmt.d - Vectorial FP Cast-and-Pack from 2x FP64, lowest 4 entries
+                                    //imm_select        = SIMM;      // rd into result field (upper bits don't matter)
+				    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
+			            collect_instr_o.use_imm = 1'b1;
+
+                                    if (~RVD) illegal_instr = 1'b1; // if we don't support RVD, we can't cast from FP64
+                                    // check destination format
+                                    case (instr_test.rvftype.vfmt)
+                                        // Only process instruction if corresponding extension is active and FLEN suffices (static)
+                                        2'b00: begin
+                                            if (~RVFVEC)            illegal_instr = 1'b1; // destination vector not supported
+                                            if (instr_test.rvftype.repl) illegal_instr = 1'b1; // no entries 2/3 in vector of 2 fp32
+                                        end
+                                        2'b01: begin
+                                            if (~XF16ALTVEC) illegal_instr = 1'b1; // destination vector not supported
+                                        end
+                                        2'b10: begin
+                                            if (~XF16VEC) illegal_instr = 1'b1; // destination vector not supported
+                                        end
+                                        2'b11: begin
+                                            if (~XF8VEC) illegal_instr = 1'b1; // destination vector not supported
+                                        end
+                                        default : illegal_instr = 1'b1;
+                                    endcase
+                                end
+                                5'b11011 : begin
+                                    collect_instr_o.op  = VFCPKCD_D; // vfcpka/b.vfmt.d - Vectorial FP Cast-and-Pack from 2x FP64, second 4 entries
+                                    //imm_select        = SIMM;      // rd into result field (upper bits don't matter)
+				    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
+			            collect_instr_o.use_imm = 1'b1;
+
+                                    if (~RVD) illegal_instr = 1'b1; // if we don't support RVD, we can't cast from FP64
+                                    // check destination format
+                                    case (instr_type.rvftype.vfmt)
+                                        // Only process instruction if corresponding extension is active and FLEN suffices (static)
+                                        2'b00: illegal_instr = 1'b1; // no entries 4-7 in vector of 2 FP32
+                                        2'b01: illegal_instr = 1'b1; // no entries 4-7 in vector of 4 FP16ALT
+                                        2'b10: illegal_instr = 1'b1; // no entries 4-7 in vector of 4 FP16
+                                        2'b11: begin
+                                            if (~XF8VEC) illegal_instr = 1'b1; // destination vector not supported
+                                        end
+                                        default : illegal_instr = 1'b1;
+                                    endcase
+                                end
+                                default : illegal_instr = 1'b1;
+                            endcase
+
+                            // check format
+                            case (instr_test.rvftype.vfmt)
+                                // Only process instruction if corresponding extension is active (static)
+                                2'b00: if (~RVFVEC)     illegal_instr = 1'b1;
+                                2'b01: if (~XF16ALTVEC) illegal_instr = 1'b1;
+                                2'b10: if (~XF16VEC)    illegal_instr = 1'b1;
+                                2'b11: if (~XF8VEC)     illegal_instr = 1'b1;
+                                default: illegal_instr = 1'b1;
+                            endcase
+
+                            // check disallowed replication
+                            if (~allow_replication & instr_test.rvftype.repl) illegal_instr = 1'b1;
+
+                            // check rounding mode
+                            if (check_fprm) begin
+                                case (frm_i) inside // actual rounding mode from frm csr
+                                    [3'b000:3'b100]: ; //legal rounding modes
+                                    default : illegal_instr = 1'b1;
+                                endcase
+                            end
+
+                        end else begin // No vectorial FP enabled (static)
+                            illegal_instr = 1'b1;
+                        end
+		end
+ 		
+		// --------------------------------
+                // 32 bit Reg-Immediate Operations
+                // --------------------------------
+                riscv::OpcodeOpImm32: begin
+                    collect_instr_o.fu  = ALU;
+                    //imm_select = IIMM;
+		    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:20] };
+              	    collect_instr_o.use_imm = 1'b1;
+                    collect_instr_o.rs1[4:0] = instr_test.itype.rs1;
+                    collect_instr_o.rd[4:0]  = instr_test.itype.rd;
+
+                    case (instr_test.itype.funct3)
+                        3'b000: collect_instr_o.op = ADDW;  // Add Immediate
+
+                        3'b001: begin
+                          collect_instr_o.op = SLLW;  // Shift Left Logical by Immediate
+                          if (instr_test.instr[31:25] != 7'b0)
+                              illegal_instr = 1'b1;
+                        end
+
+                        3'b101: begin
+                            if (instr_test.instr[31:25] == 7'b0)
+                                collect_instr_o.op = SRLW;  // Shift Right Logical by Immediate
+                            else if (instr_test.instr[31:25] == 7'b010_0000)
+                                collect_instr_o.op = SRAW;  // Shift Right Arithmetically by Immediate
+                            else
+                                illegal_instr = 1'b1;
+                        end
+
+                        default: illegal_instr = 1'b1;
+                    endcase
+                end
 
 
 	endcase
