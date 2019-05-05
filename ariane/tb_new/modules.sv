@@ -3,7 +3,7 @@ package modules_pkg;
 
 import uvm_pkg::*;
 import sequences::*;
-//import coverage::*;
+import coverage::*;
 import scoreboard::*;
 
 typedef uvm_sequencer #(decoder_transaction_in) decoder_sequencer_in;
@@ -219,8 +219,8 @@ class decoder_env extends uvm_env;
     decoder_agent_in decoder_agent_in_h;
     decoder_agent_out decoder_agent_out_h;
 	// REVISIT- Enable when coverage
-    //decoder_subscriber_in decoder_subscriber_in_h;
-    //decoder_subscriber_out decoder_subscriber_out_h;
+    decoder_subscriber_in decoder_subscriber_in_h;
+    decoder_subscriber_out decoder_subscriber_out_h;
     decoder_scoreboard decoder_scoreboard_h;
 
     function new(string name, uvm_component parent);
@@ -231,14 +231,14 @@ class decoder_env extends uvm_env;
         decoder_agent_in_h = decoder_agent_in::type_id::create("decoder_agent_in_h",this);
         decoder_agent_out_h = decoder_agent_out::type_id::create("decoder_agent_out_h",this);
 	// REVISIT- Enable when coverage
-        //decoder_subscriber_in_h = decoder_subscriber_in::type_id::create("decoder_subscriber_in_h",this);
-        //decoder_subscriber_out_h = decoder_subscriber_out::type_id::create("decoder_subscriber_out_h",this);
+        decoder_subscriber_in_h = decoder_subscriber_in::type_id::create("decoder_subscriber_in_h",this);
+        decoder_subscriber_out_h = decoder_subscriber_out::type_id::create("decoder_subscriber_out_h",this);
         decoder_scoreboard_h = decoder_scoreboard::type_id::create("decoder_scoreboard_h",this);
     endfunction: build_phase
 
     function void connect_phase(uvm_phase phase);
-        //decoder_agent_in_h.aport.connect(decoder_subscriber_in_h.analysis_export);
-       // decoder_agent_out_h.aport.connect(decoder_subscriber_out_h.analysis_export);
+        decoder_agent_in_h.aport.connect(decoder_subscriber_in_h.analysis_export);
+        decoder_agent_out_h.aport.connect(decoder_subscriber_out_h.analysis_export);
         decoder_agent_in_h.aport.connect(decoder_scoreboard_h.sb_in);
         decoder_agent_out_h.aport.connect(decoder_scoreboard_h.sb_out);
     endfunction: connect_phase
