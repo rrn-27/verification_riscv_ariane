@@ -29,7 +29,8 @@ import ariane_pkg::*;
     	rand logic [2:0]         frm_i;                   
     	rand logic               tvm_i;                   
     	rand logic               tw_i; 
-	rand logic [24:0]	 rest_i;                  
+	rand logic [24:0]	 rest_i;
+	                  
 	
         //TODO: Add constraints here
 
@@ -49,7 +50,7 @@ import ariane_pkg::*;
 	constraint restrict_reg_imm_funct7_sll{((opcode==7'b0011011)&&(funct3==3'b001))->(funct7==7'b0000000);}
 	constraint restrict_reg_imm_funt7_srl_sra{((opcode==7'b0011011)&&(funct3==3'b101))->((funct7==7'b0000000)||(funct7==7'b0100000));}
 	
-	constraint restrict_vec_float{(opcode==7'b0110011)->(instruction_i[31:30] == 2'b10);} 
+	constraint restrict_vec_float{(opcode==7'b0110011)->(imm[11:10] == 2'b10);} 
 
         function new(string name = "");
             super.new(name);
