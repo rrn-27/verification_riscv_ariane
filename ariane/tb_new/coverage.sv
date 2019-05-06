@@ -37,7 +37,11 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
 			   			bins b4 = {32'h80000000};
 			  		}
  	
-	cin2: coverpoint instruction_i[6:0];
+	cin2: coverpoint instruction_i[6:0]{	bins b5 = {7'b0101111, 7'b0111011, 7'b1000011, 7'b0100011 };
+
+
+
+					   }
 
     endgroup: inputs
     

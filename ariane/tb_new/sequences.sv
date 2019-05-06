@@ -242,7 +242,7 @@ class seq_control extends uvm_sequence #(decoder_transaction_in);
     endclass: seq_control
 
 class seq_int_reg extends uvm_sequence #(decoder_transaction_in);
-        `uvm_object_utils(seq_control)
+        `uvm_object_utils(seq_int_reg)
 
         function new(string name = "");
             super.new(name);
@@ -272,7 +272,7 @@ class seq_int_reg extends uvm_sequence #(decoder_transaction_in);
     endclass: seq_int_reg
 
 class seq_reg_imm extends uvm_sequence #(decoder_transaction_in);
-        `uvm_object_utils(seq_control)
+        `uvm_object_utils(seq_reg_imm)
 
         function new(string name = "");
             super.new(name);
@@ -302,7 +302,7 @@ class seq_reg_imm extends uvm_sequence #(decoder_transaction_in);
     endclass: seq_reg_imm
 
 class seq_vec_float extends uvm_sequence #(decoder_transaction_in);
-        `uvm_object_utils(seq_control)
+        `uvm_object_utils(seq_vec_float)
 
         function new(string name = "");
             super.new(name);
