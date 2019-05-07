@@ -14,6 +14,20 @@ module alu_verif(
 
 assert_prop_check_eq : assert property (@(posedge clk_i) disable iff(~rst_ni) (fu_data_i.operator == EQ) && ((fu_data_i.operand_a) == (fu_data_i.operand_b)) |-> alu_branch_res_o);  
 
+
+
+// Logic operation
+assert_prop_check_and : assert property (@(posedge clk_i) disable iff(~rst_ni) (fu_data_i.operator == ANDL) |-> (result_o == (fu_data_i.operand_a & fu_data_i.operand_b)));  
+assert_prop_check_or : assert property (@(posedge clk_i) disable iff(~rst_ni) (fu_data_i.operator == ORL) |-> (result_o == (fu_data_i.operand_a | fu_data_i.operand_b)));  
+assert_prop_check_xor : assert property (@(posedge clk_i) disable iff(~rst_ni) (fu_data_i.operator == XORL) |-> (result_o == (fu_data_i.operand_a ^ fu_data_i.operand_b)));  
+
+
+// Arithmetic
+assert_prop_check_add : assert property (@(posedge clk_i) disable iff(~rst_ni) (fu_data_i.operator == ADD) |-> (result_o == (fu_data_i.operand_a + fu_data_i.operand_b)));
+
+assert_prop_check_sub : assert property (@(posedge clk_i) disable iff(~rst_ni) (fu_data_i.operator == SUB) |-> (result_o == (fu_data_i.operand_a - fu_data_i.operand_b)));
+
+
 endmodule
 
 module Wrapper;
