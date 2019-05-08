@@ -30,6 +30,7 @@ logic [6:0] opcode = instruction_i[6:0];
 
 //assume
 //assumereset: assume property (@(posedge reset_n) ((instruction_o.rs1==32'b0)&&(instruction_o.rs2==32'b0)&&(instruction_o.rd==32'b0)&&(instruction_o.op==ADD)&&(instruction_o.fu==NONE)));
+assume_valid: assume property (@(posedge clk) (ex_i.valid == 0));
 
 
 //assertions	
