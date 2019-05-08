@@ -3,19 +3,19 @@
 clear -all
 
 #Reading the files (.v and .sv) 
-analyze -sv ../src/riscv-dbg/src/dm_pkg.sv ../include/riscv_pkg.sv ../include/ariane_pkg.sv ../src/decoder.sv
+analyze -sv ../src/riscv-dbg/src/dm_pkg.sv ../include/riscv_pkg.sv ../include/ariane_pkg.sv ../src/id_stage.sv ../src/instr_realigner.sv ../src/compressed_decoder.sv ../src/decoder.sv
 analyze -sv bind_wrapper_decoder.sv
 
 #Elaborating the design, specify the top module
-elaborate -top decoder
+elaborate -top id_stage
 
 #You may  need to add commands below
 
 #Set the clock
-clock clk
+clock clk_i 
 #Set Reset
 
-reset ~reset_n
+reset ~rst_ni
 
 #Prove all
 prove -bg -all

@@ -19,8 +19,8 @@ module decoder_props(
     input scoreboard_entry_t  instruction_o,           // scoreboard entry to scoreboard
     input logic               is_control_flow_instr_o, // this instruction will change the control flow
     //clk and reset
-    input  logic               clk,                     // clk added to the original design
-    input  logic               reset_n                  // reset added to the original design);
+    input  logic               clk                     // clk added to the original design
+//    input  logic               reset_n                  // reset added to the original design);
 );
 
 riscv::instruction_t instr;
@@ -29,18 +29,18 @@ assign instr = riscv::instruction_t'(instruction_i);
 logic [6:0] opcode = instruction_i[6:0];
 
 //assume
-assumereset: assume property (@(posedge reset_n) ((instruction_o.rs1==32'b0)&&(instruction_o.rs2==32'b0)&&(instruction_o.rd==32'b0)&&(instruction_o.op==ADD)&&(instruction_o.fu==NONE)));
+//assumereset: assume property (@(posedge reset_n) ((instruction_o.rs1==32'b0)&&(instruction_o.rs2==32'b0)&&(instruction_o.rd==32'b0)&&(instruction_o.op==ADD)&&(instruction_o.fu==NONE)));
 
 
 //assertions	
 
 //shvetha assertions
 
-assertreset: assert property (@(posedge reset_n) ((instruction_o.rs1==32'b0)&&(instruction_o.rs2==32'b0)&&(instruction_o.rd==32'b0)&&(instruction_o.op==ADD)&&(instruction_o.fu==NONE)));
+//assertreset: assert property (@(posedge reset_n) ((instruction_o.rs1==32'b0)&&(instruction_o.rs2==32'b0)&&(instruction_o.rd==32'b0)&&(instruction_o.op==ADD)&&(instruction_o.fu==NONE)));
 
-assertaluadd: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b000))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==ADD)&&(instruction_o.fu==ALU)));
+assertaluadd: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==ADD)&&(instruction_o.fu==ALU)));
 
-assertalusub: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0100000)&&(instr.rtype.funct3==3'b000))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SUB)&&(instruction_o.fu==ALU)));
+/*assertalusub: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0100000)&&(instr.rtype.funct3==3'b000))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SUB)&&(instruction_o.fu==ALU)));
 
 assertalusll: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b001))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SLL)&&(instruction_o.fu==ALU)));
 
@@ -104,7 +104,7 @@ assertlwu: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b00
 
 assertld: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b011))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==LD)&&(instruction_o.fu==LOAD)));
 
-
+*/
 
 endmodule
 
@@ -128,8 +128,8 @@ decoder_tb_inst(
 .tsr_i(tsr_i),                   
 .instruction_o(instruction_o),           
 .is_control_flow_instr_o(is_control_flow_instr_o),
-.clk(clk),                     
-.reset_n(reset_n)                  
+.clk(clk)                     
+//.reset_n(reset_n)                  
 
 );
 
