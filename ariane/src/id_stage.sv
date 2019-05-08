@@ -95,6 +95,7 @@ module id_stage (
         .is_control_flow_instr_o ( is_control_flow_instr         ),
         .fs_i,
         .frm_i,
+	.clk(clk_i),
         .*
     );
 
