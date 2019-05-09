@@ -7,7 +7,7 @@ analyze -sv ../src/riscv-dbg/src/dm_pkg.sv ../include/riscv_pkg.sv ../include/ar
 analyze -sv bind_wrapper_decoder.sv
 
 #Elaborating the design, specify the top module
-elaborate -top id_stage
+elaborate -top id_stage -bbox_m compressed_decoder -bbox_m instr_realigner
 
 #You may  need to add commands below
 

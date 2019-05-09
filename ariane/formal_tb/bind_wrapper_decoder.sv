@@ -29,7 +29,7 @@ assign instr = riscv::instruction_t'(instruction_i);
 logic [6:0] opcode = instruction_i[6:0];
 
 //assume
-//assumereset: assume property (@(posedge reset_n) ((instruction_o.rs1==32'b0)&&(instruction_o.rs2==32'b0)&&(instruction_o.rd==32'b0)&&(instruction_o.op==ADD)&&(instruction_o.fu==NONE)));
+
 assume_valid: assume property (@(posedge clk) (ex_i.valid == 0));
 
 
@@ -39,7 +39,14 @@ assume_valid: assume property (@(posedge clk) (ex_i.valid == 0));
 
 //assertreset: assert property (@(posedge reset_n) ((instruction_o.rs1==32'b0)&&(instruction_o.rs2==32'b0)&&(instruction_o.rd==32'b0)&&(instruction_o.op==ADD)&&(instruction_o.fu==NONE)));
 
-assertaluadd: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==ADD)&&(instruction_o.fu==ALU)));
+assertint_reg: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rvftype.funct2 != 2'b10))|=>((instruction_o.rs1==$past(instr.rtype.rs1))));
+assert_store: assert property (@(posedge clk) ((opcode==7'b0100011))|=>((instruction_o.use_imm==1)));
+assert_store_1: assert property (@(posedge clk) ((instr.stype.opcode==7'b0100011))|=>((instruction_o.rs1==$past(instr.stype.rs1))));
+
+//&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)));
+
+assertcontrol: assert property (@(posedge clk) ((opcode==7'b1100011)&&(instr.stype.funct3!=3'b010)&&(instr.stype.funct3!=3'b011)|=> ( is_control_flow_instr_o == 1'b1)));
+//assertaluadd: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b000)&&(instr.rvftype.funct2 != 2'b10))|=>((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==ADD)&&(instruction_o.fu==ALU)));
 
 /*assertalusub: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0100000)&&(instr.rtype.funct3==3'b000))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SUB)&&(instruction_o.fu==ALU)));
 
