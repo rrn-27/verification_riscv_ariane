@@ -195,7 +195,7 @@ riscv-benchmarks          := $(shell xargs printf '\n%s' < $(riscv-benchmarks-li
 # Search here for include files (e.g.: non-standalone components)
 incdir := src/common_cells/include/common_cells
 # Compile and sim flags
-compile_flag     += +cover=bcfst+/dut -incr -64 -nologo -quiet -suppress 13262 -permissive +define+$(defines)
+compile_flag     += +cover=bcfst -incr -64 -nologo -quiet -suppress 13262 -permissive +define+$(defines)
 uvm-flags        += +UVM_NO_RELNOTES +UVM_VERBOSITY=LOW
 questa-flags     += -t 1ns -64 -coverage -classdebug $(gui-sim) $(QUESTASIM_FLAGS)
 compile_flag_vhd += -64 -nologo -quiet -2008
@@ -213,9 +213,10 @@ riscv-torture-bin    := java -jar sbt-launch.jar
 # if defined, calls the questa targets in batch mode
 ifdef batch-mode
 	questa-flags += -c
-	questa-cmd   := -do "coverage save -onexit tmp/$@.ucdb; run -a; quit -code [coverage attribute -name TESTSTATUS -concise]"
+	questa-cmd   := -do "coverage save -onexit tmp/coverage_dump1.ucdb; run -a; quit -code [coverage attribute -name TESTSTATUS -concise]"
 	questa-cmd   += -do " log -r /*; run -all;"
 else
+#	questa-cmd   := -do "coverage save -onexit tmp/coverage_dump1.ucdb; run -all; exit"
 	questa-cmd   := -do " log -r /*; run -all;"
 endif
 # we want to preload the memories
@@ -244,8 +245,8 @@ build_new:clean $(library) $(library)/.build-srcs $(library)/.build-tb
 	vopt$(questa_version) $(compile_flag) -work $(library)  $(top_level) -o $(top_level)_optimized +acc -check_synthesis
 
 sim_new: clean  build_new
-	vsim${questa_version} +permissive $(questa-flags) $(questa-cmd) -lib $(library) +MAX_CYCLES=$(max_cycles) \
-	+BASEDIR=$(riscv-test-dir) $(uvm-flags) $(QUESTASIM_FLAGS)  \
+	vsim${questa_version}  +permissive $(questa-flags) $(questa-cmd) -lib $(library) +MAX_CYCLES=$(max_cycles)  \
+	 $(uvm-flags) $(QUESTASIM_FLAGS)  \
 	${top_level}_optimized +permissive-off | tee sim.log
 
 #	${top_level}_optimized +permissive-off ++$(elf-bin) ++$(target-options) | tee sim.log

@@ -10,7 +10,7 @@ import tests::*;
 module dut(dut_in _in, dut_out _out);
 decoder decoder0(
     .clk(_in.clk),
-    .reset_n(_in.reset_n),
+   // .reset_n(_in.reset_n),
     .pc_i(_in.pc_i),
     .is_compressed_i(_in.is_compressed_i),
     .compressed_instr_i(_in.compressed_instr_i),
