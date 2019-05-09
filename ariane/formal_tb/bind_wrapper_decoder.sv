@@ -33,7 +33,7 @@ logic [6:0] opcode = instruction_i[6:0];
 assume_valid: assume property (@(posedge clk) (ex_i.valid == 0));
 assume_lrw: assume property (@(posedge clk) ((opcode==7'b0101111)&&(instr.rtype.funct3==3'b010)&&(instr.instr[31:27]==5'b00010))|=>(instruction_o.rs2==5'b00000));
 assume_lrd: assume property (@(posedge clk) ((opcode==7'b0101111)&&(instr.rtype.funct3==3'b011)&&(instr.instr[31:27]==5'b00010))|=>(instruction_o.rs2==5'b00000));
-
+assume_fs_valid: assume property (@(posedge clk) (fs_i !=riscv::Off));
 
 
 //assertions	
@@ -205,6 +205,39 @@ assertdefault: assert property (@(posedge clk) ((opcode==7'b0110011)||(opcode==7
 assertimm: assert property(@(posedge clk) ((opcode==7'b0010011)||(opcode==7'b0011011)||(opcode==7'b0000011))|=>((instruction_o.result ==  { {52 {$past(instruction_i[31])}}, $past(instruction_i[31:20]) })&&(instruction_o.use_imm)==1'b1));
 
 assertsimm: assert property(@(posedge clk) ((opcode==7'b0100011))|=>((instruction_o.result == { {52 {$past(instruction_i[31])}}, $past(instruction_i[31:25]), $past(instruction_i[11:7]) })&&(instruction_o.use_imm==1'b1)));
+
+
+//Floating point Reg Reg
+
+
+assertfpregreg: assert property (@(posedge clk)((opcode==7'b1000011)||(opcode==7'b1000111)||(opcode==7'b1001011)||(opcode==7'b1001111))|=>((instruction_o.rs1 == $past(instr.r4type.rs1))&&(instruction_o.rs2 == $past(instr.r4type.rs2))&&(instruction_o.rd == $past(instr.r4type.rd))&&(instruction_o.fu == FPU)&&(!instruction_o.use_imm)&&(instruction_o.result == $past({59'b0, instr.r4type.rs3}))));
+assertfpregreg1: assert property (@(posedge clk)(opcode==7'b1000011)|=>(instruction_o.op == FMADD));
+assertfpregreg2: assert property (@(posedge clk)(opcode==7'b1000111)|=>(instruction_o.op == FMSUB));
+assertfpregreg3: assert property (@(posedge clk)(opcode==7'b1001011)|=>(instruction_o.op == FNMSUB));
+assertfpregreg4: assert property (@(posedge clk)(opcode==7'b1001111)|=>(instruction_o.op == FNMADD));
+
+assertfpregreg5: assert property (@(posedge clk)((opcode==7'b1010011)|=>(instruction_o.rd == $past(instr.r4type.rd))&&(instruction_o.fu == FPU)));
+assertfpregregfadd: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b00000)|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FADD)&&(instruction_o.rs1 == '0)&&!instruction_o.use_imm));
+
+assertfpregregfsub: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b00001)|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FSUB)&&(instruction_o.rs1 == '0)&&!instruction_o.use_imm));
+assertfpregregfmul: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b00010)|=>(instruction_o.rs2 == $past(instr.r4type.rs2))&&(instruction_o.op == FMUL)&&(instruction_o.rs1 == $past(instr.r4type.rs1))));
+assertfpregregfdiv: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b00011)|=>(instruction_o.rs2 == $past(instr.r4type.rs2))&&(instruction_o.op == FDIV)&&(instruction_o.rs1 == $past(instr.r4type.rs1))));
+assertfpregregfsqrt: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b01011)|=>(instruction_o.rs2 == $past(instr.r4type.rs2))&&(instruction_o.op == FSQRT)&&(instruction_o.rs1 == $past(instr.r4type.rs1))));
+
+assertfpregreg6: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b00100)|=>(instruction_o.rs2 == $past(instr.r4type.rs2))&&(instruction_o.op == FSGNJ)&&(instruction_o.rs1 == $past(instr.r4type.rs1))));
+
+assertfpregregminmax: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b00101)|=>(instruction_o.rs2 == $past(instr.r4type.rs2))&&(instruction_o.op == FMIN_MAX)&&(instruction_o.rs1 == $past(instr.r4type.rs1))));
+assertfpregreg7: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b01000)|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FCVT_F2F)&&(instruction_o.rs1 == $past(instr.r4type.rs1))&&instruction_o.use_imm&&(instruction_o.result==$past(i_imm(instruction_i)))));
+assertfpregreg8: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b10100)|=>(instruction_o.rs2 == $past(instr.r4type.rs2))&&(instruction_o.op == FCMP)&&(instruction_o.rs1 == $past(instr.r4type.rs1))));
+
+assertfpregreg9: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11000)|=>(instruction_o.rs2 == $past(instr.r4type.rs2))&&(instruction_o.op == FCVT_F2I)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))&&instruction_o.use_imm&&(instruction_o.result==$past(i_imm(instruction_i)))));
+assertfpregreg10: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11010)|=>(instruction_o.rs2 == $past(instr.r4type.rs2))&&(instruction_o.op == FCVT_I2F)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))&&instruction_o.use_imm&&(instruction_o.result==$past(i_imm(instruction_i)))));
+
+assertfpregreg11: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11100)&&(instr.rftype.rm == 3'b000)|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FMV_F2X)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
+assertfpregreg12: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11100)&& XF16ALT && (instr.rftype.rm == 3'b100)|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FMV_F2X)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
+assertfpregreg13: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11100)&& ((instr.rftype.rm == 3'b001)||(XF16ALT && (instr.rftype.rm == 3'b101)))|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FCLASS)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
+assertfpregreg14: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11110)|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FMV_X2F)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
+
 
 endmodule
 
