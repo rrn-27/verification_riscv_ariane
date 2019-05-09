@@ -29,7 +29,7 @@ assign instr = riscv::instruction_t'(instruction_i);
 logic [6:0] opcode = instruction_i[6:0];
 
 //assume
-//assumereset: assume property (@(posedge reset_n) ((instruction_o.rs1==32'b0)&&(instruction_o.rs2==32'b0)&&(instruction_o.rd==32'b0)&&(instruction_o.op==ADD)&&(instruction_o.fu==NONE)));
+
 assume_valid: assume property (@(posedge clk) (ex_i.valid == 0));
 
 
@@ -39,73 +39,81 @@ assume_valid: assume property (@(posedge clk) (ex_i.valid == 0));
 
 //assertreset: assert property (@(posedge reset_n) ((instruction_o.rs1==32'b0)&&(instruction_o.rs2==32'b0)&&(instruction_o.rd==32'b0)&&(instruction_o.op==ADD)&&(instruction_o.fu==NONE)));
 
-assertaluadd: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==ADD)&&(instruction_o.fu==ALU)));
+assertint_reg: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rvftype.funct2 != 2'b10))|=>((instruction_o.rs1==$past(instr.rtype.rs1))));
+assert_store: assert property (@(posedge clk) ((opcode==7'b0100011))|=>((instruction_o.use_imm==1)));
+assert_store_1: assert property (@(posedge clk) ((instr.stype.opcode==7'b0100011))|=>((instruction_o.rs1==$past(instr.stype.rs1))));
 
-/*assertalusub: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0100000)&&(instr.rtype.funct3==3'b000))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SUB)&&(instruction_o.fu==ALU)));
+//&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)));
 
-assertalusll: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b001))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SLL)&&(instruction_o.fu==ALU)));
+assertcontrol: assert property (@(posedge clk) ((opcode==7'b1100011)&&(instr.stype.funct3!=3'b010)&&(instr.stype.funct3!=3'b011)|=> ( is_control_flow_instr_o == 1'b1)));
 
-assertaluslt: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b010))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SLTS)&&(instruction_o.fu==ALU)));
+assertaluadd: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b000)&&(instr.rvftype.funct2 != 2'b10))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==ADD)&&(instruction_o.fu==ALU)));
 
-assertalusltu: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b011))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SLTU)&&(instruction_o.fu==ALU)));
+assertalusub: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0100000)&&(instr.rtype.funct3==3'b000)&&(instr.rvftype.funct2 != 2'b10))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SUB)&&(instruction_o.fu==ALU)));
 
-assertaluxor: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b100))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==XORL)&&(instruction_o.fu==ALU)));
+assertalusll: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b001)&&(instr.rvftype.funct2 != 2'b10))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SLL)&&(instruction_o.fu==ALU)));
 
-assertalusrl: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b101))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SRL)&&(instruction_o.fu==ALU)));
+assertaluslt: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b010))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SLTS)&&(instruction_o.fu==ALU)));
 
-assertalusra: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0100000)&&(instr.rtype.funct3==3'b101))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SRA)&&(instruction_o.fu==ALU)));
+assertalusltu: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b011))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SLTU)&&(instruction_o.fu==ALU)));
 
-assertaluor: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b110))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==ORL)&&(instruction_o.fu==ALU)));
+assertaluxor: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b100))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==XORL)&&(instruction_o.fu==ALU)));
 
-assertaluand: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b111))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==ANDL)&&(instruction_o.fu==ALU)));
+assertalusrl: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b101))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SRL)&&(instruction_o.fu==ALU)));
 
-assertmul: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b000))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==MUL)&&(instruction_o.fu==MULT)));
+assertalusra: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0100000)&&(instr.rtype.funct3==3'b101))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SRA)&&(instruction_o.fu==ALU)));
 
-assertmulh: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b001))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==MULH)&&(instruction_o.fu==MULT)));
+assertaluor: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b110))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==ORL)&&(instruction_o.fu==ALU)));
 
-assertmulhsu: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b010))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==MULHSU)&&(instruction_o.fu==MULT)));
+assertaluand: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b111))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==ANDL)&&(instruction_o.fu==ALU)));
 
-assertmulhu: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b011))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==MULHU)&&(instruction_o.fu==MULT)));
+assertmul: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==MUL)&&(instruction_o.fu==MULT)));
 
-assertdiv: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b100))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==DIV)&&(instruction_o.fu==MULT)));
+assertmulh: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b001))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==MULH)&&(instruction_o.fu==MULT)));
 
-assertdivu: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b101))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==DIVU)&&(instruction_o.fu==MULT)));
+assertmulhsu: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b010))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==MULHSU)&&(instruction_o.fu==MULT)));
 
-assertrem: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b110))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==REM)&&(instruction_o.fu==MULT)));
+assertmulhu: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b011))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==MULHU)&&(instruction_o.fu==MULT)));
 
-assertremu: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b111))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==REMU)&&(instruction_o.fu==MULT)));
+assertdiv: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b100))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==DIV)&&(instruction_o.fu==MULT)));
 
-assertaddiw: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0011011)&&(instr.rtype.funct3==3'b000))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==ADDW)&&(instruction_o.fu==ALU)));
+assertdivu: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b101))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==DIVU)&&(instruction_o.fu==MULT)));
 
-assertslliw: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b001))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SLLW)&&(instruction_o.fu==ALU)));
+assertrem: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b110))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==REM)&&(instruction_o.fu==MULT)));
 
-assertsrliw: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b101))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SRLW)&&(instruction_o.fu==ALU)));
+assertremu: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b111))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==REMU)&&(instruction_o.fu==MULT)));
 
-assertsraiw: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0100000)&&(instr.rtype.funct3==3'b101))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==SRAW)&&(instruction_o.fu==ALU)));
+assertaddiw: assert property (@(posedge clk) ((opcode==7'b0011011)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==ADDW)&&(instruction_o.fu==ALU)));
 
-assertsb: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b000))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.op==SB)&&(instruction_o.fu==STORE)));
+assertslliw: assert property (@(posedge clk) ((opcode==7'b0011011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b001))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SLLW)&&(instruction_o.fu==ALU)));
 
-assertsh: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b001))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.op==SH)&&(instruction_o.fu==STORE)));
+assertsrliw: assert property (@(posedge clk) ((opcode==7'b0011011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b101))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SRLW)&&(instruction_o.fu==ALU)));
 
-assertsw: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b010))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.op==SW)&&(instruction_o.fu==STORE)));
+assertsraiw: assert property (@(posedge clk) ((opcode==7'b0011011)&&(instr.rtype.funct7==7'b0100000)&&(instr.rtype.funct3==3'b101))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SRAW)&&(instruction_o.fu==ALU)));
 
-assertsd: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b011))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.op==SD)&&(instruction_o.fu==STORE)));
+assertsb: assert property (@(posedge clk) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.op==SB)&&(instruction_o.fu==STORE)));
 
-assertlb: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b000))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==LB)&&(instruction_o.fu==LOAD)));
+assertsh: assert property (@(posedge clk) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b001))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.op==SH)&&(instruction_o.fu==STORE)));
 
-assertlh: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b001))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==LH)&&(instruction_o.fu==LOAD)));
+assertsw: assert property (@(posedge clk) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b010))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.op==SW)&&(instruction_o.fu==STORE)));
 
-assertlw: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b010))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==LW)&&(instruction_o.fu==LOAD)));
+assertsd: assert property (@(posedge clk) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b011))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.op==SD)&&(instruction_o.fu==STORE)));
 
-assertlbu: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b100))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==LBU)&&(instruction_o.fu==LOAD)));
+assertlb: assert property (@(posedge clk) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==LB)&&(instruction_o.fu==LOAD)));
 
-assertlhu: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b101))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==LHU)&&(instruction_o.fu==LOAD)));
+assertlh: assert property (@(posedge clk) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b001))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==LH)&&(instruction_o.fu==LOAD)));
 
-assertlwu: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b110))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==LWU)&&(instruction_o.fu==LOAD)));
+assertlw: assert property (@(posedge clk) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b010))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==LW)&&(instruction_o.fu==LOAD)));
 
-assertld: assert property (@(posedge clk) disable iff(~reset_n) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b011))|->((instruction_o.rs1==instr.rtype.rs1)&&(instruction_o.rd==instr.rtype.rd)&&(instruction_o.op==LD)&&(instruction_o.fu==LOAD)));
+assertlbu: assert property (@(posedge clk) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b100))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==LBU)&&(instruction_o.fu==LOAD)));
 
-*/
+assertlhu: assert property (@(posedge clk) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b101))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==LHU)&&(instruction_o.fu==LOAD)));
+
+assertlwu: assert property (@(posedge clk) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b110))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==LWU)&&(instruction_o.fu==LOAD)));
+
+assertld: assert property (@(posedge clk) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b011))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==LD)&&(instruction_o.fu==LOAD)));
+
+
 
 endmodule
 
