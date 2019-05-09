@@ -34,6 +34,9 @@ assume_valid: assume property (@(posedge clk) (ex_i.valid == 0));
 assume_lrw: assume property (@(posedge clk) ((opcode==7'b0101111)&&(instr.rtype.funct3==3'b010)&&(instr.instr[31:27]==5'b00010))|=>(instruction_o.rs2==5'b00000));
 assume_lrd: assume property (@(posedge clk) ((opcode==7'b0101111)&&(instr.rtype.funct3==3'b011)&&(instr.instr[31:27]==5'b00010))|=>(instruction_o.rs2==5'b00000));
 assume_fs_valid: assume property (@(posedge clk) (fs_i !=riscv::Off));
+assume_sys_instr_1 : assume property (@(posedge clk) (opcode == 7'b1110011) && ((instr.itype.imm == 0) || (instr.itype.imm == 1) || (instr.itype.imm == 12'h2) || (instr.itype.imm == 12'h102) || (instr.itype.imm == 12'h105) || (instr.itype.imm == 12'h302)) |-> (instr.itype.rs1== 0));
+assume_sys_instr_2 : assume property (@(posedge clk) (opcode == 7'b1110011)|-> (instr.itype.funct3== 0));
+assume_sys_instr_3 : assume property (@(posedge clk) (opcode == 7'b1110011)|-> (instr.itype.rd== 0));
 
 
 //assertions	
@@ -43,9 +46,9 @@ assume_fs_valid: assume property (@(posedge clk) (fs_i !=riscv::Off));
 //assertreset: assert property (@(posedge reset_n) ((instruction_o.rs1==32'b0)&&(instruction_o.rs2==32'b0)&&(instruction_o.rd==32'b0)&&(instruction_o.op==ADD)&&(instruction_o.fu==NONE)));
 
 
-assertint_reg: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rvftype.funct2 != 2'b10))|=>((instruction_o.rs1==$past(instr.rtype.rs1))));
-assert_store: assert property (@(posedge clk) ((opcode==7'b0100011))|=>((instruction_o.use_imm==1)));
-assert_store_1: assert property (@(posedge clk) ((instr.stype.opcode==7'b0100011))|=>((instruction_o.rs1==$past(instr.stype.rs1))));
+//assertint_reg: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rvftype.funct2 != 2'b10))|=>((instruction_o.rs1==$past(instr.rtype.rs1))));
+//assert_store: assert property (@(posedge clk) ((opcode==7'b0100011))|=>((instruction_o.use_imm==1)));
+//assert_store_1: assert property (@(posedge clk) ((instr.stype.opcode==7'b0100011))|=>((instruction_o.rs1==$past(instr.stype.rs1))));
 
 //&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)));
 
@@ -237,6 +240,14 @@ assertfpregreg11: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.r
 assertfpregreg12: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11100)&& XF16ALT && (instr.rftype.rm == 3'b100)|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FMV_F2X)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
 assertfpregreg13: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11100)&& ((instr.rftype.rm == 3'b001)||(XF16ALT && (instr.rftype.rm == 3'b101)))|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FCLASS)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
 assertfpregreg14: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11110)|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FMV_X2F)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
+
+assert_ecall: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'b0))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
+assert_ebreak: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'b1))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
+assert_uret: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'h2))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
+assert_sret: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'h102))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
+assert_mret: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'h302))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
+assert_wfi: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'h105))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
+assert_sfence: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm[31:25]== 12'h09))|=>((instruction_o.rs1==instr.itype.rs1)&&(instruction_o.rd==instr.itype.rd)&&(instruction_o.fu==CSR) && (instruction_o.rs2 == instr.itype.imm[24:20])));
 
 
 endmodule
