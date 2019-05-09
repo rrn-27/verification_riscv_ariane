@@ -59,14 +59,20 @@ function void decoder_scoreboard::compare;
 
     scoreboard_entry_t instr_check;
     scoreboard_entry_t instr_output;
+    logic tb_is_control_flow;
+    logic rtl_is_control;
     instr_check = getresult_scoreboard_entry();
     instr_output = tx_out.instruction_o;
+	
+	tb_is_control_flow = getresult_cntrl_flow();
+	rtl_is_control = tx_out.is_control_flow_instr_o;
+         
 
     if(instr_check.pc != instr_output.pc) begin
 	`uvm_info("Compare_failed",$sformatf("Expected PC = %b Got PC = %b",instr_check.pc,instr_output.pc),UVM_LOW);
     end
     else if(instr_check.fu != instr_output.fu) begin
-	`uvm_info("Compare_failed",$sformatf("Expected FU= %b Got FU = %b",instr_check.fu,instr_output.fu),UVM_LOW);
+	`uvm_info("Compare_failed",$sformatf("Expected FU= %s Got FU = %s",instr_check.fu,instr_output.fu),UVM_LOW);
     end
     else if(instr_check.op != instr_output.op) begin
 	`uvm_info("Compare_failed",$sformatf("Expected OP = %b Got OP = %b",instr_check.op,instr_output.op),UVM_LOW);
@@ -81,12 +87,29 @@ function void decoder_scoreboard::compare;
 	`uvm_info("Compare_failed",$sformatf("Expected RD = %b Got RD = %b",instr_check.rd,instr_output.rd),UVM_LOW);
     end
     else if(instr_check.result != instr_output.result) begin
-	`uvm_info("Compare_failed",$sformatf("Expected Result = %b Got Result = %b",instr_check.rd,instr_output.rd),UVM_LOW);
+	`uvm_info("Compare_failed",$sformatf("Expected Result = %b Got Result = %b",instr_check.result,instr_output.result),UVM_LOW);
     end
-   
-   
-
-//  || (instr_check.result != instr_output.result) || (instr_check.valid != instr_output.valid) || (instr_check.use_imm != instr_output.use_imm) || (instr_check.use_pc != instr_output.use_pc) ||  (instr_check.bp != instr_output.bp) || (instr_check.is_compressed != instr_output.is_compressed)) begin
+    else if(instr_check.valid != instr_output.valid) begin
+	`uvm_info("Compare_failed",$sformatf("Expected Valid = %b Got Valid = %b",instr_check.valid,instr_output.valid),UVM_LOW);
+    end
+    else if(instr_check.use_imm != instr_output.use_imm) begin
+	`uvm_info("Compare_failed",$sformatf("Expected Use Imm = %b Got Use Imm = %b",instr_check.use_imm,instr_output.use_imm),UVM_LOW);
+    end
+    else if(instr_check.use_pc != instr_output.use_pc) begin
+	`uvm_info("Compare_failed",$sformatf("Expected Use PC = %b Got Use PC = %b",instr_check.use_pc,instr_output.use_pc),UVM_LOW);
+    end
+    else if(instr_check.bp != instr_output.bp) begin
+	`uvm_info("Compare_failed",$sformatf("Expected BP = %b Got BP = %b",instr_check.bp,instr_output.bp),UVM_LOW);
+    end
+    else if(instr_check.is_compressed != instr_output.is_compressed) begin
+	`uvm_info("Compare_failed",$sformatf("Expected Is compressed = %b Got Is compressed = %b",instr_check.is_compressed,instr_output.is_compressed),UVM_LOW);
+    end
+    else if(instr_check.ex != instr_output.ex) begin
+	`uvm_info("Compare_failed",$sformatf("Exception expected = %b Got exception = %b",instr_check.ex.valid,instr_output.ex.valid),UVM_LOW);
+    end
+    else if(rtl_is_control != tb_is_control_flow) begin
+	`uvm_info("Compare_failed",$sformatf("Control flow expected = %b Got control flow = %b",tb_is_control_flow,rtl_is_control),UVM_LOW);
+    end
     else begin
 //	`uvm_info("Compare_success","Decoder output equal",UVM_LOW);
 //	`uvm_info("Compare_success",$sformatf("Expected = %b Got = %b",instr_check.pc,instr_output.pc),UVM_LOW);
@@ -138,6 +161,8 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
     ebreak = 0;
 
     instr_test = riscv::instruction_t'(instruction_i);
+   `uvm_info("Scoreboard",$sformatf("Opcode = %b",instruction_i[6:0]),UVM_LOW);
+   
 	
         collect_instr_o.result        = 64'b0;
         collect_instr_o.use_imm        = 1'b0;
@@ -159,6 +184,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         check_fprm                  = 1'b0;
 
         if (~ex_i.valid) begin
+	// STORE
             case (instr_test.rtype.opcode)
                7'b0100011: begin
                     collect_instr_o.fu  = STORE;
@@ -174,7 +200,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                         default: illegal_instr = 1'b1;
                     endcase
                 end
-
+		// LOAD
                 7'b0000011: begin
                     collect_instr_o.fu  = LOAD;
                	    collect_instr_o.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
@@ -192,6 +218,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                         default: illegal_instr = 1'b1;
                     endcase
                 end
+
 
                 7'b0100111: begin
                     if (FP_PRESENT && fs_i != riscv::Off) begin 
@@ -380,7 +407,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 				3'b001:collect_instr_o.op = NE;
 				3'b100:collect_instr_o.op = LTS;
 				3'b110:collect_instr_o.op = LTU;
-				3'b001:collect_instr_o.op = GES; //Wrong ??? bug????
+				3'b101:collect_instr_o.op = GES; //Wrong ??? bug???? // REVISIT
 				3'b111:collect_instr_o.op = GEU;
  				default: begin
         //	                    control_flow = 1'b0;
@@ -424,7 +451,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 			
 		end
 //illegal operand case !!!!
-		7'b0010111: begin		//LUI
+		7'b0110111: begin		//LUI
 			collect_instr_o.fu = ALU;
 			collect_instr_o.rd[4:0]   	= instr_test.itype.rd;
         	        collect_instr_o.result 	= { {32 {tx_in.instruction_i[31]}}, tx_in.instruction_i[31:12], 12'b0 };
@@ -442,6 +469,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         	                collect_instr_o.rd  = instr_test.r4type.rd;
         	          	collect_instr_o.result = {59'b0, instr_test.r4type.rs3};
         	        	collect_instr_o.use_imm = 1'b0;
+        	                check_fprm        = 1'b1;
         	                case (instr_test.r4type.opcode)
         	                    default:      collect_instr_o.op = FMADD;  
         	                    7'b1000111:   collect_instr_o.op = FMSUB;  
@@ -491,7 +519,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         	                case (instr_test.rftype.funct5)
         	                    5'b00000: begin
         	                        collect_instr_o.op  = FADD;           
-        	                        collect_instr_o.rs1 = '0;     //Wrong??         
+        	                        collect_instr_o.rs1 = '0;             
         	                        collect_instr_o.rs2 = instr_test.rftype.rs1;
         	        		collect_instr_o.result = i_imm(tx_in.instruction_i);
         	        		collect_instr_o.use_imm = 1'b1;
@@ -499,7 +527,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         	                    end
         	                    5'b00001: begin
         	                        collect_instr_o.op  = FSUB;  
-        	                        collect_instr_o.rs1 = '0;    //Wrong??
+        	                        collect_instr_o.rs1 = '0;    
         	                        collect_instr_o.rs2 = instr_test.rftype.rs1; 
         	               		collect_instr_o.result = i_imm(tx_in.instruction_i);
         	        		collect_instr_o.use_imm = 1'b1;
@@ -626,8 +654,6 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         	                illegal_instr = 1'b1;
         	            end
 		end
-//shvetha code
-	//check_fprm = 1'b0;
 
 	////////////////////////////
 	//Integer Reg Instructions//	
@@ -650,8 +676,12 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 		                    		3'b111 : collect_instr_o.op = ANDL;  // And
 		                    		3'b001 : collect_instr_o.op = SLL;   // Shift Left Logical
 		                    		3'b101 : collect_instr_o.op = SRL;   // Shift Right Logical
+						default: begin
+		                                	illegal_instr = 1'b1;
+                			        end
 		                       	endcase
-				end else if(instr_test.rtype.funct7 == 7'b000_0001) begin
+				end
+				 else if(instr_test.rtype.funct7 == 7'b000_0001) begin
 					// Multiplications
 					case (instr_test.rtype.funct3)
 		                    		3'b000 : collect_instr_o.op = MUL;
@@ -662,13 +692,21 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 		                    		3'b101 : collect_instr_o.op = DIVU;
 		                    		3'b110 : collect_instr_o.op = REM;
 		                    		3'b111 : collect_instr_o.op = REMU;
+						default: begin
+		                                	illegal_instr = 1'b1;
+                			        end
 					endcase
-				end else if(instr_test.rtype.funct7 == 7'b010_0000) begin
+				end 
+				else if(instr_test.rtype.funct7 == 7'b010_0000) begin
 					case (instr_test.rtype.funct3)
 						3'b000 : collect_instr_o.op = SUB;   // Sub
 						3'b101 : collect_instr_o.op = SRA;   // Shift Right Arithmetic
+						default: begin
+		                                	illegal_instr = 1'b1;
+                			        end
 					endcase
 				end
+				
 			/////////////////////////////
 			//Vectorial floating point//
 			////////////////////////////
@@ -994,7 +1032,7 @@ function logic decoder_scoreboard::getresult_cntrl_flow;
     instruction_i = tx_in.instruction_i;
     instr_test = riscv::instruction_t'(instruction_i);
     case (instr_test.rtype.opcode)
-	1100011: begin
+	7'b1100011: begin
  		is_control_flow = 1'b1;
                 case (instr_test.stype.funct3)
 		3'b010,3'b011: begin
@@ -1002,10 +1040,10 @@ function logic decoder_scoreboard::getresult_cntrl_flow;
 		end
 		endcase
 	end
-	1100111: begin
+	7'b1100111: begin
  		is_control_flow = 1'b1;
 	end
-	1101111: begin
+	7'b1101111: begin
  		is_control_flow = 1'b1;
 	end
 	default: begin

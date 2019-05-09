@@ -66,16 +66,16 @@ package ariane_pkg;
     localparam bit RVD = 1'b0; // Is D extension enabled
 `else
     // Floating-point extensions configuration
-    localparam bit RVF = 1'b0; // Is F extension enabled
-    localparam bit RVD = 1'b0; // Is D extension enabled
+    localparam bit RVF = 1'b1; // Is F extension enabled
+    localparam bit RVD = 1'b1; // Is D extension enabled
 `endif
     localparam bit RVA = 1'b1; // Is A extension enabled
 
     // Transprecision floating-point extensions configuration
-    localparam bit XF16    = 1'b0; // Is half-precision float extension (Xf16) enabled
-    localparam bit XF16ALT = 1'b0; // Is alternative half-precision float extension (Xf16alt) enabled
-    localparam bit XF8     = 1'b0; // Is quarter-precision float extension (Xf8) enabled
-    localparam bit XFVEC   = 1'b0; // Is vectorial float extension (Xfvec) enabled
+    localparam bit XF16    = 1'b1; // Is half-precision float extension (Xf16) enabled
+    localparam bit XF16ALT = 1'b1; // Is alternative half-precision float extension (Xf16alt) enabled
+    localparam bit XF8     = 1'b1; // Is quarter-precision float extension (Xf8) enabled
+    localparam bit XFVEC   = 1'b1; // Is vectorial float extension (Xfvec) enabled
 
     // Transprecision float unit
     localparam int unsigned LAT_COMP_FP32    = 'd2;
