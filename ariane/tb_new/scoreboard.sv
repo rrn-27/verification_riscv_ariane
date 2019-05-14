@@ -138,7 +138,6 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
     logic               tvm_i;                   
     logic               tw_i;    
     logic illegal_instr; 
-//REVISIT this
     logic ecall;
     logic ebreak;              
     logic check_fprm;              
@@ -161,7 +160,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
     ebreak = 0;
 
     instr_test = riscv::instruction_t'(instruction_i);
-   `uvm_info("Scoreboard",$sformatf("Opcode = %b",instruction_i[6:0]),UVM_LOW);
+  // `uvm_info("Scoreboard",$sformatf("Opcode = %b",instruction_i[6:0]),UVM_LOW);
    
 	
         collect_instr_o.result        = 64'b0;
@@ -184,7 +183,9 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         check_fprm                  = 1'b0;
 
         if (~ex_i.valid) begin
-	// STORE
+//---------------------------------------
+	// Integer Store
+//---------------------------------------
             case (instr_test.rtype.opcode)
                7'b0100011: begin
                     collect_instr_o.fu  = STORE;
@@ -200,7 +201,9 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                         default: illegal_instr = 1'b1;
                     endcase
                 end
-		// LOAD
+//---------------------------------------
+		//Integer LOAD
+//---------------------------------------
                 7'b0000011: begin
                     collect_instr_o.fu  = LOAD;
                	    collect_instr_o.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
@@ -220,6 +223,9 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                 end
 
 
+//---------------------------------------
+// Floating Point Store
+//---------------------------------------
                 7'b0100111: begin
                     if (FP_PRESENT && fs_i != riscv::Off) begin 
                         collect_instr_o.fu  = STORE;
@@ -244,16 +250,17 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                         illegal_instr = 1'b1;
                 end
 
+//---------------------------------------
+// Floating Point Load
+//---------------------------------------
                 7'b0000111: begin
-                    if (FP_PRESENT && fs_i != riscv::Off) begin // only generate decoder if FP extensions are enabled (static)
+                    if (FP_PRESENT && fs_i != riscv::Off) begin 
                         collect_instr_o.fu  = LOAD;
                	        collect_instr_o.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
                         collect_instr_o.use_imm = 1'b1;
                         collect_instr_o.rs1       = instr_test.itype.rs1;
                         collect_instr_o.rd        = instr_test.itype.rd;
-                        // determine load size
                         case (instr_test.itype.funct3)
-                            // Only process instruction if corresponding extension is active (static)
                             3'b000: if (XF8) collect_instr_o.op = FLB;
                                     else illegal_instr = 1'b1;
                             3'b001: if (XF16 | XF16ALT) collect_instr_o.op = FLH;
@@ -268,6 +275,9 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                         illegal_instr = 1'b1;
                 end
 
+//---------------------------------------
+// Register Immidiate operations
+//---------------------------------------
                 7'b0010011: begin
                     collect_instr_o.fu  = ALU;
                	    collect_instr_o.result =  {{52 {instruction_i[31]}}, instruction_i[31:20]};
@@ -276,24 +286,24 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                     collect_instr_o.rd[4:0]  = instr_test.itype.rd;
 
                     case (instr_test.itype.funct3)
-                        3'b000: collect_instr_o.op = ADD;   // Add Immediate
-                        3'b010: collect_instr_o.op = SLTS;  // Set to one if Lower Than Immediate
-                        3'b011: collect_instr_o.op = SLTU;  // Set to one if Lower Than Immediate Unsigned
-                        3'b100: collect_instr_o.op = XORL;  // Exclusive Or with Immediate
-                        3'b110: collect_instr_o.op = ORL;   // Or with Immediate
-                        3'b111: collect_instr_o.op = ANDL;  // And with Immediate
+                        3'b000: collect_instr_o.op = ADD;  
+                        3'b010: collect_instr_o.op = SLTS; 
+                        3'b011: collect_instr_o.op = SLTU; 
+                        3'b100: collect_instr_o.op = XORL; 
+                        3'b110: collect_instr_o.op = ORL;   
+                        3'b111: collect_instr_o.op = ANDL;  
 
                         3'b001: begin
-                          collect_instr_o.op = SLL;  // Shift Left Logical by Immediate
+                          collect_instr_o.op = SLL;  // Shift Left Logical
                           if (instr_test.instr[31:26] != 6'b0)
                             illegal_instr = 1'b1;
                         end
 
                         3'b101: begin
                             if (instr_test.instr[31:26] == 6'b0)
-                                collect_instr_o.op = SRL;  // Shift Right Logical by Immediate
+                                collect_instr_o.op = SRL;  // Shift Right Logical
                             else if (instr_test.instr[31:26] == 6'b010_000)
-                                collect_instr_o.op = SRA;  // Shift Right Arithmetically by Immediate
+                                collect_instr_o.op = SRA;  // Shift Right Arithmetic
                             else
                                 illegal_instr = 1'b1;
                         end
@@ -336,7 +346,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 
 
 
-		7'b0101111: begin		//
+		7'b0101111: begin		
 			collect_instr_o.fu = STORE;		
 			collect_instr_o.rs1[4:0] = instr_test.atype.rs1;
 			collect_instr_o.rs2[4:0] = instr_test.atype.rs2;
@@ -407,7 +417,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 				3'b001:collect_instr_o.op = NE;
 				3'b100:collect_instr_o.op = LTS;
 				3'b110:collect_instr_o.op = LTU;
-				3'b101:collect_instr_o.op = GES; //Wrong ??? bug???? // REVISIT
+				3'b101:collect_instr_o.op = GES;  
 				3'b111:collect_instr_o.op = GEU;
  				default: begin
         //	                    control_flow = 1'b0;
@@ -427,7 +437,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 			case(instr_test.stype.funct3)
 				3'b000:collect_instr_o.op = JALR;
 				default: begin
-        	          //          control_flow = 1'b0;  //Bug????
+        	          //          control_flow = 1'b0;  
         	                    illegal_instr = 1'b1;
         	                end
 
@@ -450,7 +460,6 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 			collect_instr_o.use_pc 	= 1'b1;
 			
 		end
-//illegal operand case !!!!
 		7'b0110111: begin		//LUI
 			collect_instr_o.fu = ALU;
 			collect_instr_o.rd[4:0]   	= instr_test.itype.rd;
@@ -508,6 +517,9 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 				illegal_instr = 1'b1;
         	        end
 		end
+//----------------------
+// Floating point instructions
+//----------------------
 
 		7'b1010011 : begin
         		if (tx_in.fs_i != riscv::Off) begin 
@@ -522,15 +534,12 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         	                        collect_instr_o.rs1 = '0;             
         	                        collect_instr_o.rs2 = instr_test.rftype.rs1;
         	        		collect_instr_o.result = i_imm(tx_in.instruction_i);
-        	        		collect_instr_o.use_imm = 1'b1;
-					           
         	                    end
         	                    5'b00001: begin
         	                        collect_instr_o.op  = FSUB;  
         	                        collect_instr_o.rs1 = '0;    
         	                        collect_instr_o.rs2 = instr_test.rftype.rs1; 
         	               		collect_instr_o.result = i_imm(tx_in.instruction_i);
-        	        		collect_instr_o.use_imm = 1'b1;
         	                    end
         	                    5'b00010: collect_instr_o.op = FMUL;  
         	                    5'b00011: collect_instr_o.op = FDIV; 
@@ -542,7 +551,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         	                        collect_instr_o.op = FSGNJ; 
         	                        check_fprm       = 1'b0;  
         	                        if (XF16ALT) begin        
-        	                            if (!(instr_test.rftype.rm inside {[3'b000:3'b010], [3'b100:3'b110]})) //Wrong ?? extra rounding modes
+        	                            if (!(instr_test.rftype.rm inside {[3'b000:3'b010], [3'b100:3'b110]})) 
         	                                illegal_instr = 1'b1;
         	                        end else begin
         	                            if (!(instr_test.rftype.rm inside {[3'b000:3'b010]}))
@@ -586,13 +595,13 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         	                                illegal_instr = 1'b1;
         	                        end
         	                    end
-        	                    5'b11000: begin							//Wrong?? wht are these
+        	                    5'b11000: begin							
         	                        collect_instr_o.op = FCVT_F2I; 
         	                    	collect_instr_o.result = i_imm(tx_in.instruction_i);
         	        		collect_instr_o.use_imm = 1'b1;
         	                        if (instr_test.rftype.rs2[24:22]) illegal_instr = 1'b1; 
         	                    end
-        	                    5'b11010: begin							//Wrong?? wht are these
+        	                    5'b11010: begin							
         	                        collect_instr_o.op = FCVT_I2F;  
         	                  	collect_instr_o.result = i_imm(tx_in.instruction_i);
         	        		collect_instr_o.use_imm = 1'b1;
@@ -609,7 +618,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
         	                        
         	                        if (instr_test.rftype.rs2 != 5'b00000) illegal_instr = 1'b1;
         	                    end
-        	                    5'b11110: begin							//Wrong??
+        	                    5'b11110: begin						
         	                        collect_instr_o.op = FMV_X2F; 
         	                        collect_instr_o.rs2 = instr_test.rftype.rs1; 
         	                        check_fprm       = 1'b0;
@@ -709,259 +718,14 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
 				else begin
 		                	illegal_instr = 1'b1;
                 		end
+                	end
+			else begin 
+                                    illegal_instr = 1'b1;
+                                end
+
+                	end
 				
 				
-			/////////////////////////////
-			//Vectorial floating point//
-			////////////////////////////
-
-			end else if (instr_test.rvftype.funct2 == 2'b10) begin
-				if (FP_PRESENT && XFVEC && fs_i != riscv::Off) begin
-		                    automatic logic allow_replication; // control honoring of replication flag
-
-		                    collect_instr_o.fu       = FPU_VEC; // Same unit, but sets 'vectorial' signal
-		                    collect_instr_o.rs1[4:0] = instr_test.rvftype.rs1;
-		                    collect_instr_o.rs2[4:0] = instr_test.rvftype.rs2;
-		                    collect_instr_o.rd[4:0]  = instr_test.rvftype.rd;
-		                    check_fprm             = 1'b1;
-		                    allow_replication      = 1'b1;
-
-		                    // decode vectorial FP instruction
-		                    case (instr_test.rvftype.vecfltop)
-		                        5'b00001 : begin
-		                            collect_instr_o.op  = FADD; // vfadd.vfmt - Vectorial FP Addition
-		                            collect_instr_o.rs1 = '0;                // Operand A is set to 0
-		                            collect_instr_o.rs2 = instr_test.rvftype.rs1; // Operand B is set to rs1
-		                            collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:20] };
-		      			    collect_instr_o.use_imm = 1'b1;
-		    			end
-					5'b00010 : begin
-		                            collect_instr_o.op  = FSUB; // vfsub.vfmt - Vectorial FP Subtraction
-		                            collect_instr_o.rs1 = '0;                // Operand A is set to 0
-		                            collect_instr_o.rs2 = instr_test.rvftype.rs1; // Operand B is set to rs1
-		                            collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:20] };
-		      			    collect_instr_o.use_imm = 1'b1;
-		                        end
-		                        5'b00011 : collect_instr_o.op = FMUL; // vfmul.vfmt - Vectorial FP Multiplication
-		                        5'b00100 : collect_instr_o.op = FDIV; // vfdiv.vfmt - Vectorial FP Division
-		                        5'b00101 : begin
-		                            collect_instr_o.op = VFMIN; // vfmin.vfmt - Vectorial FP Minimum
-		                            check_fprm       = 1'b0;  // rounding mode irrelevant
-		                        end
-		                        5'b00110 : begin
-		                            collect_instr_o.op = VFMAX; // vfmax.vfmt - Vectorial FP Maximum
-		                            check_fprm       = 1'b0;  // rounding mode irrelevant
-		                        end
-		                        5'b00111 : begin
-		                            collect_instr_o.op  = FSQRT; // vfsqrt.vfmt - Vectorial FP Square Root
-		                            allow_replication = 1'b0;  // only one operand
-		                            if (instr_test.rvftype.rs2 != 5'b00000) illegal_instr = 1'b1; // rs2 must be 0
-		                        end
-		                        5'b01000 : begin
-		                            collect_instr_o.op = FMADD; // vfmac.vfmt - Vectorial FP Multiply-Accumulate
-		                            //imm_select       = SIMM;  // rd into result field (upper bits don't matter)
-		        		    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
-					    collect_instr_o.use_imm = 1'b1;
-		    			end
-		                        5'b01001 : begin
-		                            collect_instr_o.op = FMSUB; // vfmre.vfmt - Vectorial FP Multiply-Reduce
-		                            //imm_select       = SIMM;  // rd into result field (upper bits don't matter)
-					    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
-					    collect_instr_o.use_imm = 1'b1;
-		                        end
-		                        5'b01100 : begin
-		                            case (instr_test.rvftype.rs2) inside // operation encoded in rs2, `inside` for matching ?
-		                                5'b00000 : begin
-		                                    collect_instr_o.rs2 = instr_test.rvftype.rs1; // set rs2 = rs1 so we can map FMV to SGNJ in the unit
-		                                    if (instr_test.rvftype.repl)
-		                                        collect_instr_o.op = FMV_X2F; // vfmv.vfmt.x - GPR to FPR Move
-		                                    else
-		                                        collect_instr_o.op = FMV_F2X; // vfmv.x.vfmt - FPR to GPR Move
-		                                        check_fprm = 1'b0;              // no rounding for moves
-		                                end
-		                                5'b00001 : begin
-		                                    collect_instr_o.op  = FCLASS; // vfclass.vfmt - Vectorial FP Classify
-		                                    check_fprm        = 1'b0;   // no rounding for classification
-		                                    allow_replication = 1'b0;   // R must not be set
-		                                end
-		                                5'b00010 : collect_instr_o.op = FCVT_F2I; // vfcvt.x.vfmt - Vectorial FP to Int Conversion
-		                                5'b00011 : collect_instr_o.op = FCVT_I2F; // vfcvt.vfmt.x - Vectorial Int to FP Conversion
-		                                5'b001?? : begin
-		                                    collect_instr_o.op  = FCVT_F2F; // vfcvt.vfmt.vfmt - Vectorial FP to FP Conversion
-		                                    collect_instr_o.rs2 = instr_test.rvftype.rd; // set rs2 = rd as target vector for conversion
-		                                    //imm_select        = IIMM;     // rs2 holds part of the intruction
-						    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:20] };
-			      			    collect_instr_o.use_imm = 1'b1;
-
-		                                    // TODO CHECK R bit for valid fmt combinations
-		                                    // determine source format
-		                                    case (instr_test.rvftype.rs2[21:20])
-		                                        // Only process instruction if corresponding extension is active (static)
-		                                        2'b00: if (~RVFVEC)     illegal_instr = 1'b1;
-		                                        2'b01: if (~XF16ALTVEC) illegal_instr = 1'b1;
-		                                        2'b10: if (~XF16VEC)    illegal_instr = 1'b1;
-		                                        2'b11: if (~XF8VEC)     illegal_instr = 1'b1;
-		                                        default : illegal_instr = 1'b1;
-		                                    endcase
-		                                end
-		                                default : illegal_instr = 1'b1;
-		                            endcase
-		                        end
-		                        5'b01101 : begin
-		                            check_fprm = 1'b0;         // no rounding for sign-injection
-		                            collect_instr_o.op = VFSGNJ; // vfsgnj.vfmt - Vectorial FP Sign Injection
-		                        end
-		                        5'b01110 : begin
-		                            check_fprm = 1'b0;          // no rounding for sign-injection
-		                            collect_instr_o.op = VFSGNJN; // vfsgnjn.vfmt - Vectorial FP Negated Sign Injection
-		                        end
-		                        5'b01111 : begin
-		                            check_fprm = 1'b0;          // no rounding for sign-injection
-		                            collect_instr_o.op = VFSGNJX; // vfsgnjx.vfmt - Vectorial FP XORed Sign Injection
-		                        end
-		                        5'b10000 : begin
-		                            check_fprm = 1'b0;          // no rounding for comparisons
-		                            collect_instr_o.op = VFEQ;    // vfeq.vfmt - Vectorial FP Equality
-		                        end
-		                        5'b10001 : begin
-		                            check_fprm = 1'b0;          // no rounding for comparisons
-		                            collect_instr_o.op = VFNE;    // vfne.vfmt - Vectorial FP Non-Equality
-		                        end
-		                        5'b10010 : begin
-		                            check_fprm = 1'b0;          // no rounding for comparisons
-		                            collect_instr_o.op = VFLT;    // vfle.vfmt - Vectorial FP Less Than
-		                        end
-		                        5'b10011 : begin
-		                            check_fprm = 1'b0;          // no rounding for comparisons
-		                            collect_instr_o.op = VFGE;    // vfge.vfmt - Vectorial FP Greater or Equal
-		                        end
-		                        5'b10100 : begin
-		                            check_fprm = 1'b0;          // no rounding for comparisons
-		                            collect_instr_o.op = VFLE;    // vfle.vfmt - Vectorial FP Less or Equal
-		                        end
-		                        5'b10101 : begin
-		                            check_fprm = 1'b0;          // no rounding for comparisons
-		                            collect_instr_o.op = VFGT;    // vfgt.vfmt - Vectorial FP Greater Than
-		                        end
-		                        5'b11000 : begin
-		                            collect_instr_o.op  = VFCPKAB_S; // vfcpka/b.vfmt.s - Vectorial FP Cast-and-Pack from 2x FP32, lowest 4 entries
-		                            //imm_select        = SIMM;      // rd into result field (upper bits don't matter)
-					    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
-					    collect_instr_o.use_imm = 1'b1;
-
-		                            if (~RVF) illegal_instr = 1'b1; // if we don't support RVF, we can't cast from FP32
-		                            // check destination format
-		                            case (instr_test.rvftype.vfmt)
-		                                // Only process instruction if corresponding extension is active and FLEN suffices (static)
-		                                2'b00: begin
-		                                    if (~RVFVEC)            illegal_instr = 1'b1; // destination vector not supported
-		                                    if (instr_test.rvftype.repl) illegal_instr = 1'b1; // no entries 2/3 in vector of 2 fp32
-		                                end
-		                                2'b01: begin
-		                                    if (~XF16ALTVEC) illegal_instr = 1'b1; // destination vector not supported
-		                                end
-		                                2'b10: begin
-		                                    if (~XF16VEC) illegal_instr = 1'b1; // destination vector not supported
-		                                end
-		                                2'b11: begin
-		                                    if (~XF8VEC) illegal_instr = 1'b1; // destination vector not supported
-		                                end
-		                                default : illegal_instr = 1'b1;
-		                            endcase
-		                        end
-		                        5'b11001 : begin
-		                            collect_instr_o.op  = VFCPKCD_S; // vfcpkc/d.vfmt.s - Vectorial FP Cast-and-Pack from 2x FP32, second 4 entries
-		                            //imm_select        = SIMM;      // rd into result field (upper bits don't matter)
-					    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
-					    collect_instr_o.use_imm = 1'b1;
-
-		                            if (~RVF) illegal_instr = 1'b1; // if we don't support RVF, we can't cast from FP32
-		                            // check destination format
-		                            unique case (instr_test.rvftype.vfmt)
-		                                // Only process instruction if corresponding extension is active and FLEN suffices (static)
-		                                2'b00: illegal_instr = 1'b1; // no entries 4-7 in vector of 2 FP32
-		                                2'b01: illegal_instr = 1'b1; // no entries 4-7 in vector of 4 FP16ALT
-		                                2'b10: illegal_instr = 1'b1; // no entries 4-7 in vector of 4 FP16
-		                                2'b11: begin
-		                                    if (~XF8VEC) illegal_instr = 1'b1; // destination vector not supported
-		                                end
-		                                default : illegal_instr = 1'b1;
-		                            endcase
-		                        end
-		                        5'b11010 : begin
-		                            collect_instr_o.op  = VFCPKAB_D; // vfcpka/b.vfmt.d - Vectorial FP Cast-and-Pack from 2x FP64, lowest 4 entries
-		                            //imm_select        = SIMM;      // rd into result field (upper bits don't matter)
-					    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
-					    collect_instr_o.use_imm = 1'b1;
-
-		                            if (~RVD) illegal_instr = 1'b1; // if we don't support RVD, we can't cast from FP64
-		                            // check destination format
-		                            case (instr_test.rvftype.vfmt)
-		                                // Only process instruction if corresponding extension is active and FLEN suffices (static)
-		                                2'b00: begin
-		                                    if (~RVFVEC)            illegal_instr = 1'b1; // destination vector not supported
-		                                    if (instr_test.rvftype.repl) illegal_instr = 1'b1; // no entries 2/3 in vector of 2 fp32
-		                                end
-		                                2'b01: begin
-		                                    if (~XF16ALTVEC) illegal_instr = 1'b1; // destination vector not supported
-		                                end
-		                                2'b10: begin
-		                                    if (~XF16VEC) illegal_instr = 1'b1; // destination vector not supported
-		                                end
-		                                2'b11: begin
-		                                    if (~XF8VEC) illegal_instr = 1'b1; // destination vector not supported
-		                                end
-		                                default : illegal_instr = 1'b1;
-		                            endcase
-		                        end
-		                        5'b11011 : begin
-		                            collect_instr_o.op  = VFCPKCD_D; // vfcpka/b.vfmt.d - Vectorial FP Cast-and-Pack from 2x FP64, second 4 entries
-		                            //imm_select        = SIMM;      // rd into result field (upper bits don't matter)
-					    collect_instr_o.result = { {52 {instruction_i[31]}}, instruction_i[31:25], instruction_i[11:7] };
-					    collect_instr_o.use_imm = 1'b1;
-
-		                            if (~RVD) illegal_instr = 1'b1; // if we don't support RVD, we can't cast from FP64
-		                            // check destination format
-		                            case (instr_test.rvftype.vfmt)
-		                                // Only process instruction if corresponding extension is active and FLEN suffices (static)
-		                                2'b00: illegal_instr = 1'b1; // no entries 4-7 in vector of 2 FP32
-		                                2'b01: illegal_instr = 1'b1; // no entries 4-7 in vector of 4 FP16ALT
-		                                2'b10: illegal_instr = 1'b1; // no entries 4-7 in vector of 4 FP16
-		                                2'b11: begin
-		                                    if (~XF8VEC) illegal_instr = 1'b1; // destination vector not supported
-		                                end
-		                                default : illegal_instr = 1'b1;
-		                            endcase
-		                        end
-		                        default : illegal_instr = 1'b1;
-		                    endcase
-
-		                    // check format
-		                    case (instr_test.rvftype.vfmt)
-		                        // Only process instruction if corresponding extension is active (static)
-		                        2'b00: if (~RVFVEC)     illegal_instr = 1'b1;
-		                        2'b01: if (~XF16ALTVEC) illegal_instr = 1'b1;
-		                        2'b10: if (~XF16VEC)    illegal_instr = 1'b1;
-		                        2'b11: if (~XF8VEC)     illegal_instr = 1'b1;
-		                        default: illegal_instr = 1'b1;
-		                    endcase
-
-		                    // check disallowed replication
-		                    if (~allow_replication & instr_test.rvftype.repl) illegal_instr = 1'b1;
-
-		                    // check rounding mode
-		                    if (check_fprm) begin
-		                        case (frm_i) inside // actual rounding mode from frm csr
-		                            [3'b000:3'b100]: ; //legal rounding modes
-		                            default : illegal_instr = 1'b1;
-		                        endcase
-				     end
-		                end else begin // No vectorial FP enabled (static)
-		                    illegal_instr = 1'b1;
-		                end
-			end
-		end
- 		
 		// --------------------------------
                 // 32 bit Reg-Immediate Operations
                 // --------------------------------

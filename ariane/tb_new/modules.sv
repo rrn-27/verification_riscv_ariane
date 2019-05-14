@@ -56,9 +56,6 @@ class decoder_driver_in extends uvm_driver#(decoder_transaction_in);
         dut_vi_in.tvm_i		 	<= tx.tvm_i;		
         dut_vi_in.tw_i		 	<= tx.tw_i;		
 
-//REVISIT for reset
-
-
       end
     endtask: run_phase
 
@@ -111,7 +108,6 @@ class decoder_monitor_in extends uvm_monitor;
 	tx.tw_i		            =  dut_vi_in.tw_i;
 
 
-//REVISIT for reset
 
         aport.write(tx);
       end
@@ -218,7 +214,6 @@ class decoder_env extends uvm_env;
 
     decoder_agent_in decoder_agent_in_h;
     decoder_agent_out decoder_agent_out_h;
-	// REVISIT- Enable when coverage
     decoder_subscriber_in decoder_subscriber_in_h;
     decoder_subscriber_out decoder_subscriber_out_h;
     decoder_scoreboard decoder_scoreboard_h;
@@ -230,7 +225,6 @@ class decoder_env extends uvm_env;
     function void build_phase(uvm_phase phase);
         decoder_agent_in_h = decoder_agent_in::type_id::create("decoder_agent_in_h",this);
         decoder_agent_out_h = decoder_agent_out::type_id::create("decoder_agent_out_h",this);
-	// REVISIT- Enable when coverage
         decoder_subscriber_in_h = decoder_subscriber_in::type_id::create("decoder_subscriber_in_h",this);
         decoder_subscriber_out_h = decoder_subscriber_out::type_id::create("decoder_subscriber_out_h",this);
         decoder_scoreboard_h = decoder_scoreboard::type_id::create("decoder_scoreboard_h",this);

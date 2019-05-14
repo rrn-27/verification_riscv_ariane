@@ -42,21 +42,28 @@ import ariane_pkg::*;
         //TODO: Add constraints here
 
       	constraint restrict_ex_valid {(ex_i.valid == 0);} // Restrict for no exception case
-      	constraint restrict_fs_i {(fs_i != riscv::Off);} // Restrict for no exception case
+      	constraint restrict_fs_i {(fs_i != riscv::Off);} // Restrict for FP no exception case
+// Constraint  for normal Load store
       	constraint restrict_load_store {((opcode ==7'b0100011) || (opcode ==7'b0000011));}
 
 
+// Constraint  for Floating point Load store
       	constraint restrict_floating_load_store {((opcode ==7'b0100111) || (opcode ==7'b0000111));}
+// Constraint  for Atomic operation
 	constraint restrict_atomic{(opcode==7'b0101111);}
+// Constraint for Integer 32 bit register to register instructions
 	constraint restrict_32_regreg{(opcode==7'b0111011);}
+//Constraint for FP reg to reg
 	constraint restrict_fp_32_regreg{(opcode==7'b1000011)||(opcode==7'b1000111)|| (opcode==7'b1001011)||(opcode== 7'b1001111)||(opcode== 7'b1010011);}
+// Constraint for control flow
 	constraint restrict_control{((opcode==7'b1100011) || (opcode==7'b1100111) || (opcode==7'b1101111) || (opcode==7'b0010111) || (opcode==7'b0110111));}
+// Constraint for reg- imm operations
 	constraint restrict_reg_imm{(opcode==7'b0010011);}
 
-	//shvetha constraints
+	// Integer reg instructions
 	constraint restrict_integer_reg{(opcode==7'b0110011);}
-	//constraint integer_reg_legal{(opcode==7'b0110011)->((funct7==7'b0000000)||(funct7==7'b0100000)||(funct7==7'b0000001));}
-	
+	constraint restrict_integer_reg_funct7_restrict{(opcode==7'b0110011)->(funct7[6:5]!=2'b10);} // To enable only integer instructions
+// Constraint for 32 bit register immidiate	
 	constraint restrict_reg_imm_funct3{(opcode==7'b0011011);}
 	constraint restrict_reg_imm_funct7_sll{((opcode==7'b0011011)&&(funct3==3'b001))->(funct7==7'b0000000);}
 	constraint restrict_reg_imm_funt7_srl_sra{((opcode==7'b0011011)&&(funct3==3'b101))->((funct7==7'b0000000)||(funct7==7'b0100000));}
@@ -124,7 +131,7 @@ import ariane_pkg::*;
         endfunction: convert2string
 
     endclass: decoder_transaction_out
-
+// Sequence for normal Load store
     class simple_seq extends uvm_sequence #(decoder_transaction_in);
         `uvm_object_utils(simple_seq)
 
