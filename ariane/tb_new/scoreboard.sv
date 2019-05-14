@@ -706,6 +706,10 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                 			        end
 					endcase
 				end
+				else begin
+		                	illegal_instr = 1'b1;
+                		end
+				
 				
 			/////////////////////////////
 			//Vectorial floating point//

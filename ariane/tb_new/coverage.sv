@@ -36,15 +36,15 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
 						bins reg_reg = {7'b0111011};
 						bins int_reg = {7'b0110011};
 						bins thirt_two_bit_int_reg ={7'b0011011};
-						bins floating_reg_1 = {7'b1000011};
-						bins floating_reg_2 = {7'b1000111};
-						bins floating_reg_3 = {7'b1001011};
-						bins floating_reg_4 = {7'b1001111};
-						bins floating_reg_5 = {7'b1010011};
+						bins fmadd = {7'b1000011};
+						bins fmsub = {7'b1000111};
+						bins fnmsub = {7'b1001011};
+						bins fnmadd = {7'b1001111};
+						bins floating_mix = {7'b1010011};
 						bins jalr = {7'b1100111};
-						bins control_inst_1 = {7'b1101111};
-						bins control_inst_2 = {7'b0010111};
-						bins control_inst_3 = {7'b0110111};
+						bins jal = {7'b1101111};
+						bins auipc = {7'b0010111};
+						bins lui = {7'b0110111};
 			  		}
  	
 	store_variants: coverpoint instr_test.stype.funct3 iff (instr_test.rtype.opcode == 7'b0100011) 
@@ -147,7 +147,7 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
 		{
 				bins addw = {3'b000}; 
                                 bins sllw = {3'b001};
-                                bins srlw_sraw = {3'b101};
+                               bins srlw_sraw = {3'b101};
 		}
 
 	fp_unit: coverpoint instr_test.rftype.funct5  iff (instr_test.itype.opcode ==7'b1010011)
@@ -220,7 +220,7 @@ class decoder_subscriber_out extends uvm_subscriber #(decoder_transaction_out);
 			      				bins cntrl_flow = {CTRL_FLOW};
 			      				bins mult = {MULT};
 			      				bins fpu = {FPU};
-			      				bins fpu_vec = {FPU_VEC};
+			      				//bins fpu_vec = {FPU_VEC};
 			  			  }
 
 	operator_coverage: coverpoint instruction_o.op {bins add = {ADD};
@@ -318,6 +318,27 @@ class decoder_subscriber_out extends uvm_subscriber #(decoder_transaction_out);
 							bins fcmp = {FCMP};
 							bins fclass = {FCLASS};
 }
+	exception_coverage : coverpoint instruction_o.ex.valid
+				{
+			bins zero = {0};
+			bins one =  {1};
+			}
+
+	register_rd : coverpoint instruction_o.rd
+				{
+			bins reg_rd[] = {[0:31]};
+		}
+	
+	register_rs1 : coverpoint instruction_o.rs1
+                                {
+			bins reg_rs1[] = {[0:31]};
+                        }
+
+	register_rs2 : coverpoint instruction_o.rs2
+                                {
+			bins reg_rs2[] = {[0:31]};
+                        }
+
     endgroup: outputs
     
 

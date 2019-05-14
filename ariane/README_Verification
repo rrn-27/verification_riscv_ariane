@@ -1,0 +1,5 @@
+Steps to run:
+1. source source_me 
+	This will source the required modules and build the RTL and the TB
+2. make sim_new
+	This will run the simulations 

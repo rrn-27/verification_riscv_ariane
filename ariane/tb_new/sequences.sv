@@ -45,29 +45,23 @@ import ariane_pkg::*;
       	constraint restrict_fs_i {(fs_i != riscv::Off);} // Restrict for no exception case
       	constraint restrict_load_store {((opcode ==7'b0100011) || (opcode ==7'b0000011));}
 
-      	constraint restrict_store_legal {(opcode ==7'b0100011)->((funct3 == 3'b000) ||(funct3 == 3'b001) || (funct3 == 3'b010) || (funct3 == 3'b011));}
-      	constraint restrict_load_legal {(opcode ==7'b0000011)->((funct3 == 3'b000) ||(funct3 == 3'b001) || (funct3 == 3'b010) || (funct3 == 3'b011) || (funct3 == 3'b100) || (funct3 == 3'b101) || (funct3 == 3'b110));}
 
       	constraint restrict_floating_load_store {((opcode ==7'b0100111) || (opcode ==7'b0000111));}
 	constraint restrict_atomic{(opcode==7'b0101111);}
 	constraint restrict_32_regreg{(opcode==7'b0111011);}
-	constraint restrict_fp_32_regreg_legal{(opcode==7'b1000011)||(opcode==7'b1000111)|| (opcode==7'b1001011)||(opcode== 7'b1001111)||(opcode== 7'b1010011);}
+	constraint restrict_fp_32_regreg{(opcode==7'b1000011)||(opcode==7'b1000111)|| (opcode==7'b1001011)||(opcode== 7'b1001111)||(opcode== 7'b1010011);}
 	constraint restrict_control{((opcode==7'b1100011) || (opcode==7'b1100111) || (opcode==7'b1101111) || (opcode==7'b0010111) || (opcode==7'b0110111));}
-	constraint restrict_control_legal{(opcode==7'b1100011)->((funct3 == 3'b000) || (funct3==3'b001) || (funct3==3'b100) || (funct3==3'b101) || (funct3==3'b110) || (funct3==3'b111));}
 	constraint restrict_reg_imm{(opcode==7'b0010011);}
-	constraint restrict_reg_imm_legal{(opcode==7'b0010011)->((funct3 == 3'b000) || (funct3==3'b010) || (funct3==3'b011) || (funct3==3'b100) || (funct3==3'b110) || (funct3==3'b111)|| (funct3==3'b001) || (funct3==3'b101));}
 
 	//shvetha constraints
 	constraint restrict_integer_reg{(opcode==7'b0110011);}
-	constraint integer_reg_legal{(opcode==7'b0110011)->((funct7==7'b0000000)||(funct7==7'b0100000)||(funct7==7'b0000001));}
+	//constraint integer_reg_legal{(opcode==7'b0110011)->((funct7==7'b0000000)||(funct7==7'b0100000)||(funct7==7'b0000001));}
 	
 	constraint restrict_reg_imm_funct3{(opcode==7'b0011011);}
-	constraint restrict_reg_imm_funct3_legal{(opcode==7'b0011011)->((funct3==3'b000)||(funct3==3'b001)||(funct3==101));}
 	constraint restrict_reg_imm_funct7_sll{((opcode==7'b0011011)&&(funct3==3'b001))->(funct7==7'b0000000);}
 	constraint restrict_reg_imm_funt7_srl_sra{((opcode==7'b0011011)&&(funct3==3'b101))->((funct7==7'b0000000)||(funct7==7'b0100000));}
 	
 	constraint restrict_vec_float{(opcode==7'b0110011);} 
-	constraint restrict_vec_float_legal{(opcode==7'b0110011)->(imm[11:10] == 2'b10);} 
 
         function new(string name = "");
             super.new(name);
@@ -143,11 +137,9 @@ import ariane_pkg::*;
             tx=decoder_transaction_in::type_id::create("tx");
 	    tx.restrict_ex_valid.constraint_mode(1);
       	    tx.restrict_load_store.constraint_mode(1);
-      	    tx.restrict_store_legal.constraint_mode(1);
-      	    tx.restrict_load_legal.constraint_mode(1);
 	    tx.restrict_atomic.constraint_mode(0);
 	    tx.restrict_32_regreg.constraint_mode(0);
-	    tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+	    tx.restrict_fp_32_regreg.constraint_mode(0);
 	    tx.restrict_control.constraint_mode(0);
 	    tx.restrict_integer_reg.constraint_mode(0);
 	    tx.restrict_reg_imm_funct3.constraint_mode(0);
@@ -175,11 +167,9 @@ class seq_atom extends uvm_sequence #(decoder_transaction_in);
             tx=decoder_transaction_in::type_id::create("tx");
 	    tx.restrict_ex_valid.constraint_mode(1);
       	    tx.restrict_load_store.constraint_mode(0);
-      	    tx.restrict_store_legal.constraint_mode(0);
-      	    tx.restrict_load_legal.constraint_mode(0);
 	    tx.restrict_atomic.constraint_mode(1);
 	    tx.restrict_32_regreg.constraint_mode(0);
-	    tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+	    tx.restrict_fp_32_regreg.constraint_mode(0);
 	    tx.restrict_control.constraint_mode(0);
 	    tx.restrict_integer_reg.constraint_mode(0);
             tx.restrict_reg_imm_funct3.constraint_mode(0);
@@ -207,11 +197,9 @@ class seq_32_regreg extends uvm_sequence #(decoder_transaction_in);
             tx=decoder_transaction_in::type_id::create("tx");
 	    tx.restrict_ex_valid.constraint_mode(1);
       	    tx.restrict_load_store.constraint_mode(0);
-      	    tx.restrict_store_legal.constraint_mode(0);
-      	    tx.restrict_load_legal.constraint_mode(0);
 	    tx.restrict_atomic.constraint_mode(0);
 	    tx.restrict_32_regreg.constraint_mode(1);
-	    tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+	    tx.restrict_fp_32_regreg.constraint_mode(0);
 	    tx.restrict_control.constraint_mode(0);
             tx.restrict_integer_reg.constraint_mode(0);
             tx.restrict_reg_imm_funct3.constraint_mode(0);
@@ -239,11 +227,9 @@ class seq_fp_32_regreg extends uvm_sequence #(decoder_transaction_in);
             tx=decoder_transaction_in::type_id::create("tx");
 	    tx.restrict_ex_valid.constraint_mode(1);
       	    tx.restrict_load_store.constraint_mode(0);
-      	    tx.restrict_store_legal.constraint_mode(0);
-      	    tx.restrict_load_legal.constraint_mode(0);
 	    tx.restrict_atomic.constraint_mode(0);
 	    tx.restrict_32_regreg.constraint_mode(0);
-	    tx.restrict_fp_32_regreg_legal.constraint_mode(1);
+	    tx.restrict_fp_32_regreg.constraint_mode(1);
 	    tx.restrict_control.constraint_mode(0);
 	    tx.restrict_integer_reg.constraint_mode(0);
             tx.restrict_reg_imm_funct3.constraint_mode(0);
@@ -271,13 +257,10 @@ class seq_control extends uvm_sequence #(decoder_transaction_in);
             tx=decoder_transaction_in::type_id::create("tx");
 	    tx.restrict_ex_valid.constraint_mode(1);
       	    tx.restrict_load_store.constraint_mode(0);
-      	    tx.restrict_store_legal.constraint_mode(0);
-      	    tx.restrict_load_legal.constraint_mode(0);
 	    tx.restrict_atomic.constraint_mode(0);
 	    tx.restrict_32_regreg.constraint_mode(0);
-	    tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+	    tx.restrict_fp_32_regreg.constraint_mode(0);
 	    tx.restrict_control.constraint_mode(1);
-	    tx.restrict_control_legal.constraint_mode(1);
 	    tx.restrict_integer_reg.constraint_mode(0);
             tx.restrict_reg_imm_funct3.constraint_mode(0);
             tx.restrict_reg_imm_funct7_sll.constraint_mode(0);
@@ -304,14 +287,11 @@ class seq_int_reg extends uvm_sequence #(decoder_transaction_in);
             tx=decoder_transaction_in::type_id::create("tx");
             tx.restrict_ex_valid.constraint_mode(1);
             tx.restrict_load_store.constraint_mode(0);
-            tx.restrict_store_legal.constraint_mode(0);
-            tx.restrict_load_legal.constraint_mode(0);
             tx.restrict_atomic.constraint_mode(0);
             tx.restrict_32_regreg.constraint_mode(0);
-            tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+            tx.restrict_fp_32_regreg.constraint_mode(0);
             tx.restrict_control.constraint_mode(0);
 	    tx.restrict_integer_reg.constraint_mode(1);
-	    tx.integer_reg_legal.constraint_mode(1);
             tx.restrict_reg_imm_funct3.constraint_mode(0);
             tx.restrict_reg_imm_funct7_sll.constraint_mode(0);
             tx.restrict_reg_imm_funt7_srl_sra.constraint_mode(0);
@@ -337,15 +317,12 @@ class seq_reg_imm_32 extends uvm_sequence #(decoder_transaction_in);
             tx=decoder_transaction_in::type_id::create("tx");
             tx.restrict_ex_valid.constraint_mode(1);
             tx.restrict_load_store.constraint_mode(0);
-            tx.restrict_store_legal.constraint_mode(0);
-            tx.restrict_load_legal.constraint_mode(0);
             tx.restrict_atomic.constraint_mode(0);
             tx.restrict_32_regreg.constraint_mode(0);
-            tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+            tx.restrict_fp_32_regreg.constraint_mode(0);
             tx.restrict_control.constraint_mode(0);
             tx.restrict_integer_reg.constraint_mode(0);
             tx.restrict_reg_imm_funct3.constraint_mode(1);
-            tx.restrict_reg_imm_funct3_legal.constraint_mode(1);
             tx.restrict_reg_imm_funct7_sll.constraint_mode(1);
             tx.restrict_reg_imm_funt7_srl_sra.constraint_mode(1);
             tx.restrict_vec_float.constraint_mode(0);
@@ -370,18 +347,15 @@ class seq_vec_float extends uvm_sequence #(decoder_transaction_in);
             tx=decoder_transaction_in::type_id::create("tx");
             tx.restrict_ex_valid.constraint_mode(1);
             tx.restrict_load_store.constraint_mode(0);
-            tx.restrict_store_legal.constraint_mode(0);
-            tx.restrict_load_legal.constraint_mode(0);
             tx.restrict_atomic.constraint_mode(0);
             tx.restrict_32_regreg.constraint_mode(0);
-            tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+            tx.restrict_fp_32_regreg.constraint_mode(0);
             tx.restrict_control.constraint_mode(0);
             tx.restrict_integer_reg.constraint_mode(0);
             tx.restrict_reg_imm_funct3.constraint_mode(0);
             tx.restrict_reg_imm_funct7_sll.constraint_mode(0);
             tx.restrict_reg_imm_funt7_srl_sra.constraint_mode(0);
             tx.restrict_vec_float.constraint_mode(1);
-            tx.restrict_vec_float_legal.constraint_mode(1);
             tx.restrict_reg_imm.constraint_mode(0);
             tx.restrict_floating_load_store.constraint_mode(0);
 
@@ -403,18 +377,15 @@ class seq_reg_imm extends uvm_sequence #(decoder_transaction_in);
             tx=decoder_transaction_in::type_id::create("tx");
             tx.restrict_ex_valid.constraint_mode(1);
             tx.restrict_load_store.constraint_mode(0);
-            tx.restrict_store_legal.constraint_mode(0);
-            tx.restrict_load_legal.constraint_mode(0);
             tx.restrict_atomic.constraint_mode(0);
             tx.restrict_32_regreg.constraint_mode(0);
-            tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+            tx.restrict_fp_32_regreg.constraint_mode(0);
             tx.restrict_control.constraint_mode(0);
             tx.restrict_integer_reg.constraint_mode(0);
             tx.restrict_reg_imm_funct3.constraint_mode(0);
             tx.restrict_reg_imm_funct7_sll.constraint_mode(0);
             tx.restrict_reg_imm_funt7_srl_sra.constraint_mode(0);
             tx.restrict_vec_float.constraint_mode(0);
-            tx.restrict_vec_float_legal.constraint_mode(0);
             tx.restrict_reg_imm.constraint_mode(1);
             tx.restrict_floating_load_store.constraint_mode(0);
 
@@ -437,18 +408,15 @@ class seq_floating_load_store extends uvm_sequence #(decoder_transaction_in);
             tx=decoder_transaction_in::type_id::create("tx");
             tx.restrict_ex_valid.constraint_mode(1);
             tx.restrict_load_store.constraint_mode(0);
-            tx.restrict_store_legal.constraint_mode(0);
-            tx.restrict_load_legal.constraint_mode(0);
             tx.restrict_atomic.constraint_mode(0);
             tx.restrict_32_regreg.constraint_mode(0);
-            tx.restrict_fp_32_regreg_legal.constraint_mode(0);
+            tx.restrict_fp_32_regreg.constraint_mode(0);
             tx.restrict_control.constraint_mode(0);
             tx.restrict_integer_reg.constraint_mode(0);
             tx.restrict_reg_imm_funct3.constraint_mode(0);
             tx.restrict_reg_imm_funct7_sll.constraint_mode(0);
             tx.restrict_reg_imm_funt7_srl_sra.constraint_mode(0);
             tx.restrict_vec_float.constraint_mode(0);
-            tx.restrict_vec_float_legal.constraint_mode(0);
             tx.restrict_reg_imm.constraint_mode(0);
             tx.restrict_floating_load_store.constraint_mode(1);
 
