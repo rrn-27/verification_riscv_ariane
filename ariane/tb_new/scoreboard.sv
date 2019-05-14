@@ -779,7 +779,7 @@ function scoreboard_entry_t decoder_scoreboard::getresult_scoreboard_entry;
                     riscv::PRIV_LVL_M: collect_instr_o.ex.cause = riscv::ENV_CALL_MMODE;
                     riscv::PRIV_LVL_S: collect_instr_o.ex.cause = riscv::ENV_CALL_SMODE;
                     riscv::PRIV_LVL_U: collect_instr_o.ex.cause = riscv::ENV_CALL_UMODE;
-                    default:; // this should not happen
+                    default:; 
                 endcase
             end else if (ebreak) begin
                 collect_instr_o.valid    = 1'b1;
