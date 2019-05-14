@@ -1,5 +1,12 @@
-Steps to run:
+Steps to run UVM:
 1. source source_me 
 	This will source the required modules and build the RTL and the TB
 2. make sim_new
 	This will run the simulations 
+
+
+Steps to run formal verification for alu:
+	cd formal_tb
+        module load cadence/2016
+        jaspergold formal_alu.tcl &
+        
