@@ -248,6 +248,19 @@ assert_sret: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype
 assert_mret: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'h302))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
 assert_wfi: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'h105))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
 assert_sfence: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm[31:25]== 12'h09))|=>((instruction_o.rs1==$past(instr.itype.rs1)&&(instruction_o.rd==$past(instr.itype.rd))&&(instruction_o.fu==CSR) && (instruction_o.rs2 == $past(instr.itype.imm[24:20])))));
+//COVERS
+
+cover_operand_rs1: cover property (@(posedge clk) instruction_o.rs1 == 5'd0);
+cover_operand_rs2: cover property (@(posedge clk) instruction_o.rs2 == 5'd0);
+cover_operand_rs1_1: cover property (@(posedge clk) instruction_o.rs1 == 5'b11111);
+cover_operand_rs2_1: cover property (@(posedge clk) instruction_o.rs2 == 5'b11111);
+cover_operand_rd1: cover property (@(posedge clk) instruction_o.rd == 5'd0);
+cover_operand_rd1_1: cover property (@(posedge clk) instruction_o.rd == 5'b11111);
+
+
+
+
+
 
 
 endmodule
