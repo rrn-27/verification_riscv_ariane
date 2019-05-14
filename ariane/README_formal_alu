@@ -1,0 +1,5 @@
+Steps to run formal verification for alu:
+	cd formal_tb
+        module load cadence/2016
+        jaspergold formal_alu.tcl &
+        
