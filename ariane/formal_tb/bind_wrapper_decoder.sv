@@ -40,8 +40,12 @@ assume_lrd: assume property (@(posedge clk) ((opcode==7'b0101111)&&(instr.rtype.
 //to assume that the floating point valid signal is high to check the floating point instructions
 assume_fs_valid: assume property (@(posedge clk) (fs_i !=riscv::Off));
 
+//RS1 field = 0 constraint  for Privileged instructions
 assume_sys_instr_1 : assume property (@(posedge clk) (opcode == 7'b1110011) && ((instr.itype.imm == 0) || (instr.itype.imm == 1) || (instr.itype.imm == 12'h2) || (instr.itype.imm == 12'h102) || (instr.itype.imm == 12'h105) || (instr.itype.imm == 12'h302)) |-> (instr.itype.rs1== 0));
+
+//FUNCT3 field = 0 constraint  for Privileged instructions
 assume_sys_instr_2 : assume property (@(posedge clk) (opcode == 7'b1110011)|-> (instr.itype.funct3== 0));
+//RD field = 0 constraint  for Privileged instructions
 assume_sys_instr_3 : assume property (@(posedge clk) (opcode == 7'b1110011)|-> (instr.itype.rd== 0));
 
 
@@ -263,7 +267,7 @@ assertfpregreg11: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.r
 assertfpregreg12: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11100)&& XF16ALT && (instr.rftype.rm == 3'b100)|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FMV_F2X)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
 assertfpregreg13: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11100)&& ((instr.rftype.rm == 3'b001)||(XF16ALT && (instr.rftype.rm == 3'b101)))|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FCLASS)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
 assertfpregreg14: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11110)|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FMV_X2F)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
-
+//Assertions for Privileged instructions
 assert_ecall: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'b0))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
 assert_ebreak: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'b1))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
 assert_uret: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'h2))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
