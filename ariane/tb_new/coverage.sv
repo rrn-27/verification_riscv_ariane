@@ -28,6 +28,7 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
 
     //TODO: Add covergroups for the inputs
     covergroup inputs;
+// All opcodes covered
     	opc_coverage: coverpoint instr_test.rtype.opcode {bins store = {7'b0100011};
 			   			bins load = {7'b0000011};
 						bins compare = {7'b1100011};
@@ -46,7 +47,7 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
 						bins auipc = {7'b0010111};
 						bins lui = {7'b0110111};
 			  		}
- 	
+ // Int store variants	
 	store_variants: coverpoint instr_test.stype.funct3 iff (instr_test.rtype.opcode == 7'b0100011) 
 					{	bins sb = { 3'b000};
 						bins sh = { 3'b001};
@@ -54,6 +55,7 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
 						bins sd = { 3'b011};
 					}
 
+ // Compare instruction variants	
 	compare_variants: coverpoint instr_test.stype.funct3 iff (instr_test.rtype.opcode == 7'b1100011) 
 				{		bins beq = { 3'b000};
 						bins bne = { 3'b001};
@@ -63,6 +65,7 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
 						bins bgeu = { 3'b111};}
 
 
+ // Integer load instruction variants	
 	load_variants: coverpoint instr_test.itype.funct3 iff (instr_test.rtype.opcode == 7'b0000011) 
 				{		bins lb = { 3'b000};
 						bins lh = { 3'b001};
@@ -71,7 +74,8 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
 						bins lbu = { 3'b100};
 						bins lhu = { 3'b101};
 						bins lwu = { 3'b110}; }
-//REVISIT - upper bits for SRL,SLL and SRA
+
+ // Register imm instruction variants	
 	reg_imm_variants: coverpoint instr_test.itype.funct3 iff (instr_test.rtype.opcode == 7'b0010011) 
 				{		bins add = { 3'b000};
 						bins slt = { 3'b010};
@@ -81,7 +85,7 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
 						bins and_op = { 3'b111};
 						bins sll = { 3'b001};
 						bins srl = { 3'b101};}
-// REVISIT for 2
+// Atomic instruction variants
 	atomic_coverage_f5: coverpoint instr_test.atype.funct5 iff (instr_test.atype.opcode == 7'b0101111)
 					{	bins b9 = {5'h0};
 						bins b10 = {5'h1};
@@ -104,6 +108,7 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
 				
 
 	atomic_coverage: cross atomic_coverage_f5,atomic_coverage_f3;
+// FP store/load variants
 
 	fp_store: coverpoint instr_test.stype.funct3 iff (instr_test.stype.opcode == 7'b0100111) 
 					{	bins fsb = {3'b000};
@@ -117,8 +122,8 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
 						bins flw = {3'b010};
 						bins fld = {3'b011};
 					}
-
-	reg_imm_1: coverpoint {instr_test.rtype.funct7, instr_test.rtype.funct3}  iff (instr_test.itype.opcode == 7'b0111011) 
+// Reg-Reg variants
+	reg_reg_1: coverpoint {instr_test.rtype.funct7, instr_test.rtype.funct3}  iff (instr_test.itype.opcode == 7'b0111011) 
 					{	
 			     bins addw = {7'b0000000, 3'b000}; 
                              bins subw = {7'b0100000, 3'b000};
@@ -130,7 +135,7 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
                              bins divuw = {7'b0000001, 3'b101};
 			     bins remw = {7'b0000001, 3'b110};
 			     bins remuw = {7'b0000001, 3'b111};}
-	
+//Int reg variants	
 	int_reg: coverpoint instr_test.rtype.funct3  iff ((instr_test.rvftype.funct2 != 2'b10) && (instr_test.itype.opcode ==7'b0110011))
 		{
 				bins add = {3'b000}; 
@@ -141,7 +146,8 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
                                 bins and_op = {3'b111};
                                 bins sll = {3'b001}; 
                                 bins srl = {3'b101}; 
-		} 
+		}
+// 32 bit reg immidiate 
 
 	op_imm32: coverpoint instr_test.itype.funct3  iff (instr_test.itype.opcode ==7'b0011011)
 		{
@@ -149,6 +155,7 @@ class decoder_subscriber_in extends uvm_subscriber #(decoder_transaction_in);
                                 bins sllw = {3'b001};
                                bins srlw_sraw = {3'b101};
 		}
+// FP operation variants
 
 	fp_unit: coverpoint instr_test.rftype.funct5  iff (instr_test.itype.opcode ==7'b1010011)
 		{
@@ -213,7 +220,7 @@ class decoder_subscriber_out extends uvm_subscriber #(decoder_transaction_out);
 	is_control_flow: coverpoint is_control_flow_instr_o { 	bins b1 = {1'b1};
 			      				bins b2 = {1'b0};
 			  			  }
-
+// Functional unti coverage
 	functional_units: coverpoint instruction_o.fu {	bins load = {LOAD};
 			      				bins store = {STORE};
 			      				bins alu = {ALU};
@@ -222,7 +229,7 @@ class decoder_subscriber_out extends uvm_subscriber #(decoder_transaction_out);
 			      				bins fpu = {FPU};
 			      				//bins fpu_vec = {FPU_VEC};
 			  			  }
-
+// Operator coverage
 	operator_coverage: coverpoint instruction_o.op {bins add = {ADD};
 							bins sub = {SUB};
 							bins addw =  {ADDW};
@@ -318,12 +325,13 @@ class decoder_subscriber_out extends uvm_subscriber #(decoder_transaction_out);
 							bins fcmp = {FCMP};
 							bins fclass = {FCLASS};
 }
+// Exception coverage
 	exception_coverage : coverpoint instruction_o.ex.valid
 				{
 			bins zero = {0};
 			bins one =  {1};
 			}
-
+// All register coverage
 	register_rd : coverpoint instruction_o.rd
 				{
 			bins reg_rd[] = {[0:31]};

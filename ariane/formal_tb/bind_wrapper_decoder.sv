@@ -30,12 +30,22 @@ logic [6:0] opcode = instruction_i[6:0];
 
 //assume
 
+//to assume that the exception valid sinal is low so that no excceptions occur
 assume_valid: assume property (@(posedge clk) (ex_i.valid == 0));
+
+//to make the rs2 bits in the lrw and lrd instructions all 0
 assume_lrw: assume property (@(posedge clk) ((opcode==7'b0101111)&&(instr.rtype.funct3==3'b010)&&(instr.instr[31:27]==5'b00010))|=>(instruction_o.rs2==5'b00000));
 assume_lrd: assume property (@(posedge clk) ((opcode==7'b0101111)&&(instr.rtype.funct3==3'b011)&&(instr.instr[31:27]==5'b00010))|=>(instruction_o.rs2==5'b00000));
+
+//to assume that the floating point valid signal is high to check the floating point instructions
 assume_fs_valid: assume property (@(posedge clk) (fs_i !=riscv::Off));
+
+//RS1 field = 0 constraint  for Privileged instructions
 assume_sys_instr_1 : assume property (@(posedge clk) (opcode == 7'b1110011) && ((instr.itype.imm == 0) || (instr.itype.imm == 1) || (instr.itype.imm == 12'h2) || (instr.itype.imm == 12'h102) || (instr.itype.imm == 12'h105) || (instr.itype.imm == 12'h302)) |-> (instr.itype.rs1== 0));
+
+//FUNCT3 field = 0 constraint  for Privileged instructions
 assume_sys_instr_2 : assume property (@(posedge clk) (opcode == 7'b1110011)|-> (instr.itype.funct3== 0));
+//RD field = 0 constraint  for Privileged instructions
 assume_sys_instr_3 : assume property (@(posedge clk) (opcode == 7'b1110011)|-> (instr.itype.rd== 0));
 
 
@@ -52,8 +62,12 @@ assume_sys_instr_3 : assume property (@(posedge clk) (opcode == 7'b1110011)|-> (
 
 //&&(instruction_o.rs2==instr.rtype.rs2)&&(instruction_o.rd==instr.rtype.rd)));
 
+
+//Control Flow Instructions
 assertcontrol: assert property (@(posedge clk) ((opcode==7'b1100011)&&(instr.stype.funct3!=3'b010)&&(instr.stype.funct3!=3'b011)|=> ( is_control_flow_instr_o == 1'b1)));
 
+
+//Integer Reg-Reg instructions
 assertaluadd: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b000)&&(instr.rvftype.funct2 != 2'b10))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==ADD)&&(instruction_o.fu==ALU)));
 
 assertalusub: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0100000)&&(instr.rtype.funct3==3'b000)&&(instr.rvftype.funct2 != 2'b10))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SUB)&&(instruction_o.fu==ALU)));
@@ -90,6 +104,8 @@ assertrem: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.f
 
 assertremu: assert property (@(posedge clk) ((opcode==7'b0110011)&&(instr.rtype.funct7==7'b0000001)&&(instr.rtype.funct3==3'b111))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==REMU)&&(instruction_o.fu==MULT)));
 
+
+//32 bit Reg-Immediate Operations
 assertaddiw: assert property (@(posedge clk) ((opcode==7'b0011011)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==ADDW)&&(instruction_o.fu==ALU)));
 
 assertslliw: assert property (@(posedge clk) ((opcode==7'b0011011)&&(instr.rtype.funct7==7'b0000000)&&(instr.rtype.funct3==3'b001))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SLLW)&&(instruction_o.fu==ALU)));
@@ -98,7 +114,9 @@ assertsrliw: assert property (@(posedge clk) ((opcode==7'b0011011)&&(instr.rtype
 
 assertsraiw: assert property (@(posedge clk) ((opcode==7'b0011011)&&(instr.rtype.funct7==7'b0100000)&&(instr.rtype.funct3==3'b101))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SRAW)&&(instruction_o.fu==ALU)));
 
-assertsb: assert property (@(posedge clk) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.op==SB)&&(instruction_o.fu==STORE)));
+
+//LSU
+assertsb: assert property (@(dge clk) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.op==SB)&&(instruction_o.fu==STORE)));
 
 assertsh: assert property (@(posedge clk) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b001))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.op==SH)&&(instruction_o.fu==STORE)));
 
@@ -120,6 +138,8 @@ assertlwu: assert property (@(posedge clk) ((opcode==7'b0000011)&&(instr.rtype.f
 
 assertld: assert property (@(posedge clk) ((opcode==7'b0000011)&&(instr.rtype.funct3==3'b011))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==LD)&&(instruction_o.fu==LOAD)));
 
+
+//32 bit Reg-Reg Operations
 assertaddw: assert property (@(posedge clk) ((opcode==7'b0111011)&&(instr.rtype.funct3==3'b000)&&(instr.rtype.funct7==7'b0000000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==ADDW)&&(instruction_o.fu==ALU)));
 
 assertsubw: assert property (@(posedge clk) ((opcode==7'b0111011)&&(instr.rtype.funct3==3'b000)&&(instr.rtype.funct7==7'b0100000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SUBW)&&(instruction_o.fu==ALU)));
@@ -140,6 +160,8 @@ assertremw: assert property (@(posedge clk) ((opcode==7'b0111011)&&(instr.rtype.
 
 assertremuw: assert property (@(posedge clk) ((opcode==7'b0111011)&&(instr.rtype.funct3==3'b111)&&(instr.rtype.funct7==7'b0000001))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==REMUW)&&(instruction_o.fu==MULT)));
 
+
+//Reg-Immediate Operations
 assertaddi: assert property (@(posedge clk) ((opcode==7'b0010011)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==ADD)&&(instruction_o.fu==ALU)));
 
 assertslti: assert property (@(posedge clk) ((opcode==7'b0010011)&&(instr.rtype.funct3==3'b010))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SLTS)&&(instruction_o.fu==ALU)));
@@ -158,6 +180,8 @@ assertsrli: assert property (@(posedge clk) ((opcode==7'b0010011)&&(instr.rtype.
 
 assertsrai: assert property (@(posedge clk) ((opcode==7'b0010011)&&(instr.rtype.funct3==3'b101)&&(instr.rtype.funct7==7'b0100000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==SRA)&&(instruction_o.fu==ALU)));
 
+
+//Atomic Operations
 assertlrw: assert property (@(posedge clk) ((opcode==7'b0101111)&&(instr.rtype.funct3==3'b010)&&(instr.instr[31:27]==5'b00010))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==AMO_LRW)&&(instruction_o.fu==STORE)&&(instruction_o.rs2==5'b00000)));
 
 assertscw: assert property (@(posedge clk) ((opcode==7'b0101111)&&(instr.rtype.funct3==3'b010)&&(instr.instr[31:27]==5'b00011))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==AMO_SCW)&&(instruction_o.fu==STORE)&&(instruction_o.rs2==$past(instr.rtype.rs2))));
@@ -203,8 +227,11 @@ assertamominud: assert property (@(posedge clk) ((opcode==7'b0101111)&&(instr.rt
 assertamomaxud: assert property (@(posedge clk) ((opcode==7'b0101111)&&(instr.rtype.funct3==3'b011)&&(instr.instr[31:27]==5'b11100))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rd==$past(instr.rtype.rd))&&(instruction_o.op==AMO_MAXDU)&&(instruction_o.fu==STORE)&&(instruction_o.rs2==$past(instr.rtype.rs2))));
 
 
+//Assertions for default
 assertdefault: assert property (@(posedge clk) ((opcode==7'b0110011)||(opcode==7'b0111011)||(opcode==7'b0010011)||(opcode==7'b0011011)||(opcode==7'b0100011)||(opcode==7'b0000011)||(opcode==7'b0101111)) |=> ((instruction_o.pc == $past(pc_i))&&(instruction_o.trans_id==5'b0)&&(instruction_o.use_pc==1'b0)&&(instruction_o.is_compressed==$past(is_compressed_i))&&(instruction_o.use_zimm==1'b0)&&(instruction_o.bp==$past(branch_predict_i))));
 
+
+//Sign extend Immediate instructions assertions
 assertimm: assert property(@(posedge clk) ((opcode==7'b0010011)||(opcode==7'b0011011)||(opcode==7'b0000011))|=>((instruction_o.result ==  { {52 {$past(instruction_i[31])}}, $past(instruction_i[31:20]) })&&(instruction_o.use_imm)==1'b1));
 
 assertsimm: assert property(@(posedge clk) ((opcode==7'b0100011))|=>((instruction_o.result == { {52 {$past(instruction_i[31])}}, $past(instruction_i[31:25]), $past(instruction_i[11:7]) })&&(instruction_o.use_imm==1'b1)));
@@ -240,7 +267,7 @@ assertfpregreg11: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.r
 assertfpregreg12: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11100)&& XF16ALT && (instr.rftype.rm == 3'b100)|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FMV_F2X)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
 assertfpregreg13: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11100)&& ((instr.rftype.rm == 3'b001)||(XF16ALT && (instr.rftype.rm == 3'b101)))|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FCLASS)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
 assertfpregreg14: assert property (@(posedge clk)((opcode==7'b1010011)&&(instr.rftype.funct5==5'b11110)|=>(instruction_o.rs2 == $past(instr.r4type.rs1))&&(instruction_o.op == FMV_X2F)&&(instruction_o.rs1 ==  $past(instr.r4type.rs1))));
-
+//Assertions for Privileged instructions
 assert_ecall: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'b0))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
 assert_ebreak: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'b1))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
 assert_uret: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'h2))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
@@ -248,6 +275,7 @@ assert_sret: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype
 assert_mret: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'h302))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
 assert_wfi: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm== 12'h105))|=>((instruction_o.rs1==0)&&(instruction_o.rd==0)&&(instruction_o.fu==CSR)));
 assert_sfence: assert property (@(posedge clk) ((opcode==7'b1110011)&&(instr.itype.imm[31:25]== 12'h09))|=>((instruction_o.rs1==$past(instr.itype.rs1)&&(instruction_o.rd==$past(instr.itype.rd))&&(instruction_o.fu==CSR) && (instruction_o.rs2 == $past(instr.itype.imm[24:20])))));
+
 //COVERS
 
 cover_operand_rs1: cover property (@(posedge clk) instruction_o.rs1 == 5'd0);
