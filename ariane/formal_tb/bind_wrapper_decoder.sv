@@ -116,7 +116,7 @@ assertsraiw: assert property (@(posedge clk) ((opcode==7'b0011011)&&(instr.rtype
 
 
 //LSU
-assertsb: assert property (@(dge clk) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.op==SB)&&(instruction_o.fu==STORE)));
+assertsb: assert property (@(posedge clk) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b000))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.op==SB)&&(instruction_o.fu==STORE)));
 
 assertsh: assert property (@(posedge clk) ((opcode==7'b0100011)&&(instr.rtype.funct3==3'b001))|=>((instruction_o.rs1==$past(instr.rtype.rs1))&&(instruction_o.rs2==$past(instr.rtype.rs2))&&(instruction_o.op==SH)&&(instruction_o.fu==STORE)));
 

@@ -10,7 +10,7 @@ Steps to run formal verification for alu:
         module load cadence/2016
         jaspergold formal_alu.tcl &
 
-Steps to run formal verification for alu:
+Steps to run formal verification for decoder:
 	cd formal_tb
         module load cadence/2016
         jaspergold formal_decoder.tcl &
